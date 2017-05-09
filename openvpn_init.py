@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/local/bin/python2.7
 # /etc/rc.conf needs these:
 #openvpn_enable="YES"
 #openvpn_configfile="/openvpn/default.ovpn"
@@ -21,4 +21,4 @@ def update_openvpn(conf_filename, write_file=False):
     return contents
 
 if __name__ == "__main__":
-    update_openvpn('/etc/rc.conf')
+    update_openvpn('/etc/rc.conf', True)

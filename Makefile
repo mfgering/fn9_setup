@@ -10,8 +10,9 @@ openvpn:
 	mkdir -p /usr/local/etc/openvpn
 	mkdir -p /openvpn
 	chown media:media /openvpn
+	./openvpn_init.py
 	@echo openvpn installed
 
 test:
-	./openvpn-init.sh
+	./openvpn_init.py
 
