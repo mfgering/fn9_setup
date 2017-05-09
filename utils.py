@@ -4,7 +4,9 @@ def update_or_add(contents, regex, replacement):
     p = re.compile(regex, re.MULTILINE)
     (contents, matches) = p.subn(replacement, contents)
     if matches == 0:
-        contents += "\n"+replacement
+        if not contents.endswith("\n"):
+            contents += "\n"
+        contents += replacement+"\n"
     return contents
 
 def update_or_add_setting(contents, name, value):
