@@ -2,11 +2,13 @@
 
 from utils import update_or_add_settings
 
-def update_openvpn(conf_filename, write_file=False):
+def update_transmission(conf_filename, write_file=False):
     settings = [
-        ('openvpn_enable', '"YES"'),
-        ('openvpn_configfile', '"/openvpn/default.ovpn"'),
-        ('openvpn_flags', '"--script-security 2"'),
+        ('transmission_enable', '"YES"'),
+        ('transmission_conf_dir', '"/config"'),
+        ('transmission_download_dir', '"/downloads"'),
+        ('transmission_watch_dir', '"/watched"'),
+        ('transmission_user', '"media"'),
     ]
     with open(conf_filename) as f:
         contents = f.read()
@@ -17,4 +19,4 @@ def update_openvpn(conf_filename, write_file=False):
     return contents
 
 if __name__ == "__main__":
-    update_openvpn('/etc/rc.conf', True)
+    update_transmission('/etc/rc.conf', True)
