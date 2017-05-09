@@ -5,3 +5,13 @@
 help:
 	@echo Hi there
 
+openvpn:
+	pkg install openvpn bind-tools
+	mkdir -p /usr/local/etc/openvpn
+	mkdir -p /openvpn
+	chown media:media /openvpn
+	@echo openvpn installed
+
+test:
+	./openvpn-init.sh
+
