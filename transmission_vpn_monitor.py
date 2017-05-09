@@ -1,6 +1,7 @@
 #!/usr/local/bin/python2.7
 
-import os
+import re
+
 from subprocess import Popen, PIPE
 
 def get_tun_ip():
@@ -13,7 +14,19 @@ def get_tun_ip():
 def stop_transmission():
     pipe = Popen("service transmission stop", shell=True, stdout=PIPE, stderr=PIPE).stdout
 
-
+def update_transmission_bind_addr(addr, settings_file='/config/settings.json'):
+    pattern = r'^(.*bind-address-ipv4"\s*:\s*")(.*?)(".*)$'
+    p = re.compile(pattern, re.MULTILINE)
+    bind_ip = None
+    with open(settings_file) as f:
+        contents = f.read()
+    m = p.match(contents)
+    bind_ip = m.group(2)
+    if bind_ip != addr:
+        stop_transmission()
+        updated_contents = p.sub(r'\1'+addr+r'3', contents)
+        with open(settings_file, 'w') as f:
+            f.write(contents)
 
 def run():
     tun_ip = get_tun_ip()
