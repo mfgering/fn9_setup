@@ -18,7 +18,7 @@ clean: clean_openvpn clean_transmission
 
 /usr/local/etc/rc.d/openvpn: /usr/local/etc/rc.d
 	pkg install -y openvpn
-	./openvpn_init.py
+	./in_jail.py add_openvpn_rc_conf
 
 /openvpn:
 	mkdir -p /openvpn
@@ -31,6 +31,7 @@ clean_openvpn:
 	-service openvpn stop
 	-pkg remove -y openvpn
 	rm -fr /openvpn
+	./in_jail.py remove_openvpn_rc_conf
 
 
 ####################
@@ -58,6 +59,7 @@ clean_transmission:
 	-pkg remove -y transmission-daemon transmission-cli transmission-web
 	rm -fr /config /watched /downloads /incomplete-downloads
 	-rmuser -y transmission
+	./in_jail.py remove_transmission_rc_conf
 
 
 ##########################
