@@ -8,15 +8,15 @@ help:
 /usr/local/etc/openvpn:
 	mkdir -p /usr/local/etc/openvpn
 
-/usr/local/etc/rc.d/openvpn: /usr/local/etc/openvpn
+/usr/local/etc/rc.d/openvpn: /usr/local/etc/rc.d
 	pkg install -y openvpn
+	./openvpn_init.py
 
 /openvpn:
 	mkdir -p /openvpn
 	chown media:media /openvpn
 
-openvpn: /usr/local/sbin/openvpn /openvpn
-	./openvpn_init.py
+openvpn: /openvpn /usr/local/etc/openvpn /usr/local/etc/rc.d/openvpn 
 	@echo openvpn installed
 
 transmission:
