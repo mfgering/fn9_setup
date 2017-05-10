@@ -2,10 +2,12 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY : openvpn transmission transmission_dirs
+.PHONY : clean openvpn clean_openvpn transmission transmission_dirs clean-transmission
 
 help:
 	@echo Hi there
+
+clean: clean_openvpn clean_transmission
 
 ####################
 # openvpn rules
@@ -24,6 +26,12 @@ help:
 
 openvpn: /openvpn /usr/local/etc/openvpn /usr/local/etc/rc.d/openvpn 
 	@echo openvpn installed
+
+clean_openvpn:
+	-service openvpn stop
+	-pkg remove -y openvpn
+	rm -fr /openvpn
+
 
 ####################
 # transmission rules
