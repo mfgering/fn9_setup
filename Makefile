@@ -53,10 +53,11 @@ transmission: transmission_dirs /usr/local/etc/rc.d/transmission
 	-service transmission stop
 	cp transmission-settings.json /config/settings.json
 
-clean-transmission:
+clean_transmission:
 	-service transmission stop
 	-pkg remove -y transmission-daemon transmission-cli transmission-web
 	rm -fr /config /watched /downloads /incomplete-downloads
+	-rmuser -y transmission
 
 
 ##########################
