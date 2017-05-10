@@ -39,6 +39,7 @@ transmission_dirs: /config /watched /downloads /incomplete-downloads
 	pkg install -y transmission-daemon transmission-cli transmission-web
 	./transmission_init.py
 	cp transmission-settings.json /config/settings.json
+	touch /usr/local/etc/rc.d/transmission
 
 transmission: transmission_dirs /usr/local/etc/rc.d/transmission
 	-service transmission stop
@@ -46,7 +47,7 @@ transmission: transmission_dirs /usr/local/etc/rc.d/transmission
 
 clean-transmission:
 	-service transmission stop
-	pkg remove -y transmission-daemon transmission-cli transmission-web
+	-pkg remove -y transmission-daemon transmission-cli transmission-web
 	rm -fr /config /watched /downloads /incomplete-downloads
 
 
