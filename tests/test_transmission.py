@@ -1,5 +1,5 @@
 from unittest import TestCase
-from openvpn_init import update_openvpn
+from in_jail import _add_transmission_rc_conf
 from transmission_vpn_monitor import update_transmission_bind_addr
 
 class TestTransmisson(TestCase):
