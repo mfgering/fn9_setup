@@ -20,7 +20,7 @@ def _edit_openvpn_rc_conf(conf_filename, write_file=False, add_conf=True):
     ]
     return _edit_rc_conf(conf_filename, settings, write_file, add_conf)
 
-def _edit_transmission_rc_conf(conf_filename, write_file=False):
+def _edit_transmission_rc_conf(conf_filename, write_file=False, add_conf=True):
     settings = [
         ('transmission_enable', '"YES"'),
         ('transmission_conf_dir', '"/config"'),
