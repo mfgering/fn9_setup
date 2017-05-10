@@ -37,7 +37,7 @@ transmission_dirs: /config /watched /downloads /incomplete-downloads
 
 /usr/local/etc/rc.d/transmission: /usr/local/etc/rc.d
 	pkg install -y transmission-daemon transmission-cli transmission-web
-	./in_jail add_transmission_rc_conf
+	./in_jail.py add_transmission_rc_conf
 	cp transmission-settings.json /config/settings.json
 	touch /usr/local/etc/rc.d/transmission
 
