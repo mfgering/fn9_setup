@@ -15,7 +15,8 @@ def stop_transmission():
     pipe = Popen("service transmission stop", shell=True, stdout=PIPE, stderr=PIPE).stdout
 
 def update_transmission_bind_addr(addr, settings_file='/config/settings.json'):
-    pattern = r'^(.*bind-address-ipv4"\s*:\s*")(.*?)(".*)$'
+    result = False
+    pattern = r'(.*bind-address-ipv4"\s*:\s*")(.*?)(".*)'
     p = re.compile(pattern, re.MULTILINE)
     bind_ip = None
     with open(settings_file) as f:
@@ -27,6 +28,8 @@ def update_transmission_bind_addr(addr, settings_file='/config/settings.json'):
         updated_contents = p.sub(r'\1'+addr+r'3', contents)
         with open(settings_file, 'w') as f:
             f.write(contents)
+            result = True
+    return result
 
 def run():
     tun_ip = get_tun_ip()

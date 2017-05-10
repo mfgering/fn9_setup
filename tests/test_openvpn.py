@@ -1,5 +1,6 @@
 from unittest import TestCase
 from openvpn_init import update_openvpn
+from transmission_vpn_monitor import update_transmission_bind_addr
 
 class TestOpenvpn(TestCase):
 
