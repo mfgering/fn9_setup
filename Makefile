@@ -8,7 +8,7 @@ help:
 /usr/local/etc/openvpn:
 	mkdir -p /usr/local/etc/openvpn
 
-/usr/local/sbin/openvpn: /usr/local/etc/openvpn
+/usr/local/etc/rc.d/openvpn: /usr/local/etc/openvpn
 	pkg install -y openvpn
 
 /openvpn:
