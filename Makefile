@@ -1,13 +1,38 @@
 
 
 .DEFAULT_GOAL := help
+JAIL_HOST ?= test
+FN_HOST ?= 192.168.1.229
+FN_SETUP_DIR_NAME ?= fn9_setup
+FN_USER_ME ?= mgering
 
-.PHONY : clean portsnap openvpn clean_openvpn transmission transmission_dirs clean-transmission
+.PHONY : clean portsnap openvpn clean_openvpn transmission transmission_dirs \
+	clean-transmission jail
 
 help:
 	@echo Hi there
 
 clean: clean_openvpn clean_transmission
+
+###############
+# FreeNAS 9 setup
+###############
+
+fn9_setup: copy_setup_to_f9 mount_setup
+
+copy_setup_to_f9:
+	-ssh $(FN_HOST) mkdir $(FN_SETUP_DIR_NAME)
+	scp -r -p * $(FN_HOST):$(FN_SETUP_DIR_NAME)/
+
+mount_setup: jail
+	./in_host.py add_storage $(FN_HOST) $(JAIL_HOST) /mnt/vol1/home/$(FN_USER_ME)/$(FN_SETUP_DIR_NAME) /root/$(FN_SETUP_DIR_NAME)
+
+jail:
+	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST)
+
+###############
+# Portsnap
+###############
 
 /var/db/portsnap:
 	portsnap fetch
