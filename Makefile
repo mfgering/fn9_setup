@@ -2,12 +2,21 @@
 
 .DEFAULT_GOAL := help
 
-.PHONY : clean openvpn clean_openvpn transmission transmission_dirs clean-transmission
+.PHONY : clean portsnap openvpn clean_openvpn transmission transmission_dirs clean-transmission
 
 help:
 	@echo Hi there
 
 clean: clean_openvpn clean_transmission
+
+/var/db/portsnap:
+	portsnap fetch
+
+/usr/ports: /var/db/portsnap
+	portsnap extract
+
+portsnap: /usr/ports
+	portsnap update
 
 ####################
 # openvpn rules
