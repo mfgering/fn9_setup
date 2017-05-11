@@ -13,7 +13,6 @@ def jails(args):
     host = args[0]
     url = "http://%s/api/v1.0/jails/jails/" % (host)
     jails = requests.get(url, auth=(settings.AUTH_NAME, settings.AUTH_PASSWORD)).json()
-    print(jails)
     return jails
 
 def create_jail(args):
