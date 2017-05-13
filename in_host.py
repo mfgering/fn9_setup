@@ -18,7 +18,7 @@ def get_jail(fn_host, jail_host=None, id=None):
     return None
 
 def get_jails(fn_host):
-    url = "http://%s/api/v1.0/jails/mountpoints/" % (fn_host)
+    url = "http://%s/api/v1.0/jails/jails/" % (fn_host)
     response = requests.get(url, auth=get_auth()).json()
     return response
 
@@ -60,6 +60,7 @@ def cmd_create_jail(args):
     data = {
         'jail_host': jail_host,
         'jail_ipv4': 'DHCP',
+        'jail_autostart': True,
     }
     response = requests.post(url, auth=get_auth(), json=data).json()
     return response

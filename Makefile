@@ -49,15 +49,19 @@ jail_transmission:
 	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_TRANSMISSION)
 
 remote_jail_transmission_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_transmission_services
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_transmission_services fn9_transmission_settings
 
 remote_jail_transmission_storage:
-    #TODO: FIX THIS
+	#TODO: FIX THIS
 	$(error Need to add storage to the jail)
 
 ###############################################################################
 # Run these within the FreeNAS host
 ###############################################################################
+
+fn9_transmission_settings:
+	cp transmission-settings.json /mnt/vol1/apps/transmission/settings.json
+	chown media:media /mnt/vol1/apps/transmission/settings.json
 
 fn9_jail_transmission_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transmission_services
@@ -133,7 +137,9 @@ clean_openvpn:
 # transmission rules
 ####################
 
-transmission_dirs: /transmission_config /transmission_config/watched /transmission_config/downloads /transmission_config/incomplete-downloads
+jail_transmission_services: transmission_dirs /usr/local/etc/rc.d/transmission
+
+transmission_dirs: /transmission/config /transmission/watched /transmission/downloads /transmission/incomplete-downloads
 
 /transmission/config /transmission/watched /transmission/downloads /transmission/incomplete-downloads: FORCE
 	mkdir -p $@
@@ -142,12 +148,12 @@ transmission_dirs: /transmission_config /transmission_config/watched /transmissi
 /usr/local/etc/rc.d/transmission: /usr/local/etc/rc.d
 	pkg install -y transmission-daemon transmission-cli transmission-web
 	./in_jail.py add_transmission_rc_conf
-	cp transmission-settings.json /transmission_config/settings.json
+	#cp transmission-settings.json /transmission/config/settings.json
 	touch /usr/local/etc/rc.d/transmission
 
 transmission: transmission_dirs /usr/local/etc/rc.d/transmission
 	-service transmission stop
-	cp transmission-settings.json /transmission_config/settings.json
+	cp transmission-settings.json /transmission/config/settings.json
 
 clean_transmission:
 	-service transmission stop

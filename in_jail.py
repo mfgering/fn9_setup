@@ -3,6 +3,8 @@ import sys
 
 from utils import edit_rc_conf_settings
 
+#TODO: use sysrc to edit the files
+
 def edit_rc_conf(conf_filename, settings, write_file, add_conf):
     with open(conf_filename) as f:
         contents = f.read()
