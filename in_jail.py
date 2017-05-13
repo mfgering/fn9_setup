@@ -23,9 +23,9 @@ def edit_openvpn_rc_conf(conf_filename, write_file=False, add_conf=True):
 def edit_transmission_rc_conf(conf_filename, write_file=False, add_conf=True):
     settings = [
         ('transmission_enable', '"YES"'),
-        ('transmission_conf_dir', '"/transmission_config"'),
-        ('transmission_download_dir', '"/downloads"'),
-        ('transmission_watch_dir', '"/watched"'),
+        ('transmission_conf_dir', '"/transmission/config"'),
+        ('transmission_download_dir', '"/transmission/downloads"'),
+        ('transmission_watch_dir', '"/transmission/watched"'),
         ('transmission_user', '"media"'),
     ]
     return edit_rc_conf(conf_filename, settings, write_file, add_conf)
@@ -33,7 +33,7 @@ def edit_transmission_rc_conf(conf_filename, write_file=False, add_conf=True):
 def edit_sabnzbd_rc_conf(conf_filename, write_file=False, add_conf=True):
     settings = [
         ('sabnzbd_enable', '"YES"'),
-        ('sabnzbd_conf_dir', '"/sabnzbd_config"'),
+        ('sabnzbd_conf_dir', '"/sabnzbd/config"'),
         ('sabnzbd_user', '"media"'),
         ('sabnzbd_group', '"media"'),
     ]

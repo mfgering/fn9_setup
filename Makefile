@@ -1,7 +1,13 @@
 
 
 .DEFAULT_GOAL := help
-JAIL_HOST ?= test3
+#JAIL_HOST ?= test3
+JAIL_HOST_TRANSMISSION ?= transmission_test
+JAIL_HOST_SABNZBD ?= sabnzbd_test
+JAIL_HOST_SONARR ?= sonarr_test
+JAIL_HOST_RADARR ?= radarr_test
+JAIL_HOST_JACKETT ?= jackett_test
+
 FN_HOST ?= 192.168.1.229
 FN_SETUP_DIR_NAME ?= fn9_setup
 FN_USER_ME ?= mgering
@@ -23,25 +29,29 @@ clean: clean_openvpn clean_transmission
 # FreeNAS 9 setup
 #######################
 
-remote_setup: update_root_ssh_key jail copy_setup_to_f9 mount_setup mount_setup
+remote_setup: update_root_ssh_key jail copy_setup_to_fn9 remote_transmission
 
 update_root_ssh_key:
 	-./in_host.py update_ssh_key $(FN_HOST) root id_rsa.pub
 
-copy_setup_to_f9:
+copy_setup_to_fn9:
 	-ssh root@$(FN_HOST) mkdir $(FN_SETUP_DIR_NAME)
 	scp -r -p * root@$(FN_HOST):$(FN_SETUP_DIR_NAME)/
 
-mount_setup: jail
-	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST) $(FN_SETUP_DIR_NAME)
+# For each jail...
 
-jail:
-	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST)
+remote_transmission: mount_transmission_setup remote_jail_transmission_services
 
-remote_jail_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_services
+mount_transmission_setup: jail_transmission
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
 
-remote_jail_storage:
+jail_transmission:
+	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_TRANSMISSION)
+
+remote_jail_transmission_services:
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_transmission_services
+
+remote_jail_transmission_storage:
     #TODO: FIX THIS
 	$(error Need to add storage to the jail)
 
@@ -49,14 +59,12 @@ remote_jail_storage:
 # Run these within the FreeNAS host
 ###############################################################################
 
-fn9_jail_services:
-	jexec $(JAIL_HOST) make -C /root/$(FN_SETUP_DIR_NAME) jail_services
+fn9_jail_transmission_services:
+	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transmission_services
 
 ###############################################################################
 # Run these within the jail
 ###############################################################################
-
-jail_services: sabnzbd transmission openvpn
 
 ###############
 # Portsnap
@@ -86,11 +94,11 @@ sabnzbd_source:
 sabnzbd_packages:
 	pkg install -y py27-sqlite3 unzip py27-yenc py27-cheetah py27-openssl py27-feedparser py27-utils unrar par2cmdline
 
-sabnzbd_config: /sabnzbd_config
+sabnzbd_config: /sabnzbd/config
 	cp sabnzbd.rc.d /usr/local/etc/rc.d/sabnzbd
 	./in_jail.py add_sabnzbd_rc_conf
 
-/sabnzbd_config: FORCE
+/sabnzbd/config: FORCE
 	mkdir -p $@
 	chown media:media $@
 
@@ -125,9 +133,9 @@ clean_openvpn:
 # transmission rules
 ####################
 
-transmission_dirs: /transmission_config /watched /downloads /incomplete-downloads
+transmission_dirs: /transmission_config /transmission_config/watched /transmission_config/downloads /transmission_config/incomplete-downloads
 
-/transmission_config /watched /downloads /incomplete-downloads: FORCE
+/transmission/config /transmission/watched /transmission/downloads /transmission/incomplete-downloads: FORCE
 	mkdir -p $@
 	chown media:media $@
 
@@ -144,7 +152,7 @@ transmission: transmission_dirs /usr/local/etc/rc.d/transmission
 clean_transmission:
 	-service transmission stop
 	-pkg remove -y transmission-daemon transmission-cli transmission-web
-	rm -fr /transmission_config /watched /downloads /incomplete-downloads
+	rm -fr /transmission
 	-rmuser -y transmission
 	./in_jail.py remove_transmission_rc_conf
 
