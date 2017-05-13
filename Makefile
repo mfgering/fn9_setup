@@ -29,7 +29,7 @@ clean: clean_openvpn clean_transmission
 # FreeNAS 9 setup
 #######################
 
-remote_setup: update_root_ssh_key jail copy_setup_to_fn9 remote_transmission
+remote_setup: update_root_ssh_key copy_setup_to_fn9 remote_transmission
 
 update_root_ssh_key:
 	-./in_host.py update_ssh_key $(FN_HOST) root id_rsa.pub
@@ -37,6 +37,10 @@ update_root_ssh_key:
 copy_setup_to_fn9:
 	-ssh root@$(FN_HOST) mkdir $(FN_SETUP_DIR_NAME)
 	scp -r -p * root@$(FN_HOST):$(FN_SETUP_DIR_NAME)/
+
+alpha_to_test_app_files:
+	scp -3 -r root@alpha:/mnt/vol1/apps/* root@$(FN_HOST):/mnt/vol1/apps/
+	ssh root@$(FN_HOST) chown -R media:media /mnt/vol1/apps/*
 
 # For each jail...
 
