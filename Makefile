@@ -41,6 +41,10 @@ jail:
 remote_jail_services:
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_services
 
+remote_jail_storage:
+    #TODO: FIX THIS
+	$(error Need to add storage to the jail)
+
 ###############################################################################
 # Run these within the FreeNAS host
 ###############################################################################
@@ -85,6 +89,10 @@ sabnzbd_packages:
 sabnzbd_config: /sabnzbd_config
 	cp sabnzbd.rc.d /usr/local/etc/rc.d/sabnzbd
 	./in_jail.py add_sabnzbd_rc_conf
+
+/sabnzbd_config: FORCE
+	mkdir -p $@
+	chown media:media $@
 
 sabnzbd: sabnzbd_packages sabnzbd_source sabnzbd_config
 
