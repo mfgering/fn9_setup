@@ -32,13 +32,16 @@ def update_transmission_bind_addr(addr, settings_file='/config/settings.json'):
     return result
 
 def run():
-    tun_ip = get_tun_ip()
-    if tun_ip is None:
-        stop_transmission()
-    else:
-        # Check that the tunnel IP matches the transmission config
-        pass
-    print(tun_ip)
+    while True:
+        tun_ip = get_tun_ip()
+        if tun_ip is None:
+            stop_transmission()
+        else:
+            # Check that the tunnel IP matches the transmission config
+            pass
+        #TODO: FIX THIS to see if we have to restart openvpn and
+        #TODO: FIX THIS to see if the tunnel is actually working
+        print(tun_ip)
 
 if __name__ == "__main__":
     run()

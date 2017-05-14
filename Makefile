@@ -44,10 +44,16 @@ alpha_to_test_app_files:
 
 # For each jail...
 
-remote_transmission: mount_transmission_setup remote_jail_transmission_services
+remote_transmission_jail: mount_transmission_setup remote_jail_transmission_services \
+                     remote_jail_transmission_storage remote_jail_openvpn_services \
+                     remote_jail_openvpn_storage
 
 mount_transmission_setup: jail_transmission
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
+
+#############################################################################
+# The transmission jail includes transmission, openvpn, and the proxy server
+#############################################################################
 
 jail_transmission:
 	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_TRANSMISSION)
@@ -56,19 +62,31 @@ remote_jail_transmission_services:
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_transmission_services fn9_transmission_settings
 
 remote_jail_transmission_storage:
-	#TODO: FIX THIS
-	$(error Need to add storage to the jail)
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/config /transmission/config
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/media/downloads /transmission/downloads
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/incomplete-downloads /transmission/incomplete-downloads
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/watched /transmission/watched
+
+remote_jail_openvpn_services:
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_openvpn_services
+
+remote_jail_openvpn_storage:
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/openvpn /openvpn
 
 ###############################################################################
 # Run these within the FreeNAS host
 ###############################################################################
 
 fn9_transmission_settings:
-	cp transmission-settings.json /mnt/vol1/apps/transmission/settings.json
-	chown media:media /mnt/vol1/apps/transmission/settings.json
+    #NOTE: The transmission daemon must be stopped before updating the settings
+	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transmission_settings
 
 fn9_jail_transmission_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transmission_services
+
+#NOTE: The jail for openvpn is the transmission jail
+fn9_jail_openvpn_services:
+	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_openvpn_services
 
 ###############################################################################
 # Run these within the jail
@@ -127,7 +145,7 @@ sabnzbd: sabnzbd_packages sabnzbd_source sabnzbd_config
 	mkdir -p /openvpn
 	chown media:media /openvpn
 
-openvpn: /openvpn /usr/local/etc/openvpn /usr/local/etc/rc.d/openvpn 
+jail_openvpn_services: /openvpn /usr/local/etc/openvpn /usr/local/etc/rc.d/openvpn
 	@echo openvpn installed
 
 clean_openvpn:
@@ -155,9 +173,12 @@ transmission_dirs: /transmission/config /transmission/watched /transmission/down
 	#cp transmission-settings.json /transmission/config/settings.json
 	touch /usr/local/etc/rc.d/transmission
 
-transmission: transmission_dirs /usr/local/etc/rc.d/transmission
+#transmission: transmission_dirs /usr/local/etc/rc.d/transmission
+
+jail_transmission_settings:
 	-service transmission stop
 	cp transmission-settings.json /transmission/config/settings.json
+	chown media:media /transmission/config/settings.json
 
 clean_transmission:
 	-service transmission stop
