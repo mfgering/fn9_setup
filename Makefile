@@ -29,7 +29,8 @@ clean: clean_openvpn clean_transmission
 # FreeNAS 9 setup
 #######################
 
-remote_setup: update_root_ssh_key copy_setup_to_fn9 remote_transmission
+remote_setup: update_root_ssh_key copy_setup_to_fn9  create_groups create_users \
+		update_home_dirs remote_transmission
 
 update_root_ssh_key:
 	-./in_host.py update_ssh_key $(FN_HOST) root id_rsa.pub
@@ -42,11 +43,30 @@ alpha_to_test_app_files:
 	scp -3 -r root@alpha:/mnt/vol1/apps/* root@$(FN_HOST):/mnt/vol1/apps/
 	ssh root@$(FN_HOST) chown -R media:media /mnt/vol1/apps/*
 
+create_groups:
+	-./in_host.py add_group $(FN_HOST) 1000 mgering sudo
+	-./in_host.py add_group $(FN_HOST) 1007 marsha no
+	-./in_host.py add_group $(FN_HOST) 1008 meferree-backup no
+	-./in_host.py add_group $(FN_HOST) 1009 lepton-backup no
+	-./in_host.py add_group $(FN_HOST) 1010 mgering-dell-backup no
+
+create_users:
+	-./in_host.py add_user $(FN_HOST) mgering "Mike Gering" foo 1000 mgering sudo
+	-./in_host.py add_user $(FN_HOST) marsha "Marsha Ferree" foo 1002 marsha no
+	-./in_host.py add_user $(FN_HOST) meferree-backup "Backup for meferree laptop" foo 1008 meferree-backup no
+	-./in_host.py add_user $(FN_HOST) lepton-backup "Backup for lepton" foo 1009 lepton-backup no
+	-./in_host.py add_user $(FN_HOST) mgering-dell-bak "Backup for lepton" foo 1010 mgering-dell-bak no
+
+update_home_dirs:
+	$(error Need to update home directories)
+
+#############################################################################
 # For each jail...
+#############################################################################
 
 remote_transmission_jail: mount_transmission_setup remote_jail_transmission_services \
-                     remote_jail_transmission_storage remote_jail_openvpn_services \
-                     remote_jail_openvpn_storage
+					 remote_jail_transmission_storage remote_jail_openvpn_services \
+					 remote_jail_openvpn_storage
 
 mount_transmission_setup: jail_transmission
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
@@ -78,7 +98,7 @@ remote_jail_openvpn_storage:
 ###############################################################################
 
 fn9_transmission_settings:
-    #NOTE: The transmission daemon must be stopped before updating the settings
+	#NOTE: The transmission daemon must be stopped before updating the settings
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transmission_settings
 
 fn9_jail_transmission_services:
