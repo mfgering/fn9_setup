@@ -5,7 +5,7 @@ import time
 
 from subprocess import Popen, PIPE
 
-DEBUG = True
+DEBUG = False
 
 def get_tun_ip():
     pipe = Popen("ifconfig tun0", shell=True, stdout=PIPE, stderr=PIPE).stdout

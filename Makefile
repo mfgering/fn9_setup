@@ -66,7 +66,7 @@ update_home_dirs:
 
 remote_transmission_jail: mount_transmission_setup remote_jail_transmission_services \
 					 remote_jail_transmission_storage remote_jail_openvpn_services \
-					 remote_jail_openvpn_storage
+					 remote_jail_openvpn_storage remote_jail_transvpnmon_services
 
 mount_transmission_setup: jail_transmission
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
@@ -86,6 +86,9 @@ remote_jail_transmission_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/media/downloads /transmission/downloads
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/incomplete-downloads /transmission/incomplete-downloads
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/watched /transmission/watched
+
+remote_jail_transvpnmon_services:
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_transvpnmon_services
 
 remote_jail_openvpn_services:
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_openvpn_services
@@ -107,6 +110,10 @@ fn9_jail_transmission_services:
 #NOTE: The jail for openvpn is the transmission jail
 fn9_jail_openvpn_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_openvpn_services
+
+#NOTE: The jail for transvpnmon is the transmission jail
+fn9_jail_transvpnmon_services:
+	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transvpnmon_services
 
 ###############################################################################
 # Run these within the jail
@@ -151,6 +158,19 @@ sabnzbd_config: /sabnzbd/config
 sabnzbd: sabnzbd_packages sabnzbd_source sabnzbd_config
 
 ####################
+# transvpnmon rules
+####################
+
+jail_transvpnmon_services: /usr/local/etc/rc.d/transvpnmon /usr/sbin/transvpnmon.py
+
+/usr/local/etc/rc.d/transvpnmon: ./transvpnmon
+	cp ./transvpnmon /usr/local/etc/rc.d/transvpnmon
+	./in_jail.py add_transvpnmon_rc_conf
+
+/usr/sbin/transvpnmon.py: ./transvpnmon.py
+	cp ./transvpnmon.py /usr/sbin/transvpnmon.py
+
+####################
 # openvpn rules
 ####################
 
@@ -193,8 +213,6 @@ transmission_dirs: /transmission/config /transmission/watched /transmission/down
 	#cp transmission-settings.json /transmission/config/settings.json
 	touch /usr/local/etc/rc.d/transmission
 
-#transmission: transmission_dirs /usr/local/etc/rc.d/transmission
-
 jail_transmission_settings:
 	-service transmission stop
 	cp transmission-settings.json /transmission/config/settings.json
@@ -206,7 +224,6 @@ clean_transmission:
 	rm -fr /transmission
 	-rmuser -y transmission
 	./in_jail.py remove_transmission_rc_conf
-
 
 ##########################
 
