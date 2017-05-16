@@ -13,7 +13,7 @@ def get_jail(fn_host, jail_host=None, id=None):
         raise ValueError("Must have one of jail_host or id args")
     jails = get_jails(fn_host)
     for jail in jails:
-        if jail_host == jail['jail'] or id == str(jail['id']):
+        if jail_host == jail['jail_host'] or id == str(jail['id']):
             return jail
     return None
 

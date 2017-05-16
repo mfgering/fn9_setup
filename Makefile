@@ -30,7 +30,7 @@ clean: clean_openvpn clean_transmission
 #######################
 
 remote_setup: update_root_ssh_key copy_setup_to_fn9  create_groups create_users \
-		update_home_dirs remote_transmission
+		update_home_dirs remote_transmission_jail remote_sonarr_jail
 
 update_root_ssh_key:
 	-./in_host.py update_ssh_key $(FN_HOST) root id_rsa.pub
@@ -72,7 +72,7 @@ mount_transmission_setup: jail_transmission
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
 
 
-remote_sonarr_jail:  mount_sonarr_setup remote_jail_sonarr_services
+remote_sonarr_jail:  mount_sonarr_setup remote_jail_sonarr_services remote_jail_sonarr_storage
 
 mount_sonarr_setup: jail_sonarr
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_SONARR) $(FN_SETUP_DIR_NAME)
@@ -88,11 +88,11 @@ remote_jail_sonarr_services:
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_sonarr_services
 
 remote_jail_sonarr_storage:
-    $(error Need storage for sonarr)
-# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/config /transmission/config
-# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/media/downloads /transmission/downloads
-# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/incomplete-downloads /transmission/incomplete-downloads
-# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/watched /transmission/watched
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/apps/sonarr/config /sonarr/config
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/media/downloads /downloads
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/media/tv /tv
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/media/mfg/tv /mfg-tv
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/apps/sonarr/drone-factory /drone-factory
 
 
 #############################################################################
@@ -123,6 +123,9 @@ remote_jail_openvpn_storage:
 ###############################################################################
 # Run these within the FreeNAS host
 ###############################################################################
+
+fn9_jail_sonarr_services:
+	jexec $(JAIL_HOST_SONARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_sonarr_services
 
 fn9_transmission_settings:
 	#NOTE: The transmission daemon must be stopped before updating the settings
@@ -255,14 +258,14 @@ clean_transmission:
 
 jail_sonarr_services: sonarr_dirs /usr/local/etc/rc.d/sonarr
 
-sonarr_dirs: /sonarr/config /sonarr/tv /sonarr/downloads /sonarr/drone-factory /sonarr/mfg-tv
+sonarr_dirs: /sonarr/config /tv /downloads /drone-factory /mfg-tv
 
-/sonarr/config /sonarr/tv /sonarr/downloads /sonarr/drone-factory /sonarr/mfg-tv: FORCE
+/sonarr/config /tv /downloads /drone-factory /mfg-tv: FORCE
 	mkdir -p $@
 	chown media:media $@
 
 /usr/local/etc/rc.d/sonarr: /usr/local/etc/rc.d
-	pkg install -y sonarr-daemon sonarr-cli sonarr-web
+	pkg install -y sonarr
 	./in_jail.py add_sonarr_rc_conf
 	touch /usr/local/etc/rc.d/sonarr
 
