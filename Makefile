@@ -71,6 +71,30 @@ remote_transmission_jail: mount_transmission_setup remote_jail_transmission_serv
 mount_transmission_setup: jail_transmission
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
 
+
+remote_sonarr_jail:  mount_sonarr_setup remote_jail_sonarr_services
+
+mount_sonarr_setup: jail_sonarr
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_SONARR) $(FN_SETUP_DIR_NAME)
+
+#############################################################################
+# The sonarr jail
+#############################################################################
+
+jail_sonarr:
+	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_SONARR)
+
+remote_jail_sonarr_services:
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_sonarr_services
+
+remote_jail_sonarr_storage:
+    $(error Need storage for sonarr)
+# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/config /transmission/config
+# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/media/downloads /transmission/downloads
+# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/incomplete-downloads /transmission/incomplete-downloads
+# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/watched /transmission/watched
+
+
 #############################################################################
 # The transmission jail includes transmission, openvpn, and the proxy server
 #############################################################################
@@ -224,6 +248,29 @@ clean_transmission:
 	rm -fr /transmission
 	-rmuser -y transmission
 	./in_jail.py remove_transmission_rc_conf
+
+####################
+# sonarr rules
+####################
+
+jail_sonarr_services: sonarr_dirs /usr/local/etc/rc.d/sonarr
+
+sonarr_dirs: /sonarr/config /sonarr/tv /sonarr/downloads /sonarr/drone-factory /sonarr/mfg-tv
+
+/sonarr/config /sonarr/tv /sonarr/downloads /sonarr/drone-factory /sonarr/mfg-tv: FORCE
+	mkdir -p $@
+	chown media:media $@
+
+/usr/local/etc/rc.d/sonarr: /usr/local/etc/rc.d
+	pkg install -y sonarr-daemon sonarr-cli sonarr-web
+	./in_jail.py add_sonarr_rc_conf
+	touch /usr/local/etc/rc.d/sonarr
+
+clean_sonarr:
+	-service sonarr stop
+	-pkg remove -y sonarr
+	rm -fr /sonarr
+	./in_jail.py remove_sonarr_rc_conf
 
 ##########################
 
