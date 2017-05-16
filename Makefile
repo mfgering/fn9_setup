@@ -1,12 +1,16 @@
 
 
 .DEFAULT_GOAL := help
-#JAIL_HOST ?= test3
 JAIL_HOST_TRANSMISSION ?= transmission_test
+JAIL_HOST_TRANSMISSION_IPV4 ?= DHCP
 JAIL_HOST_SABNZBD ?= sabnzbd_test
+JAIL_HOST_SABNZBD_IPV4 ?= DHCP
 JAIL_HOST_SONARR ?= sonarr_test
+JAIL_HOST_SONARR_IPV4 ?= DHCP
 JAIL_HOST_RADARR ?= radarr_test
+JAIL_HOST_RADARR_IPV4 ?= DHCP
 JAIL_HOST_JACKETT ?= jackett_test
+JAIL_HOST_JACKETT_IPV4 ?= DHCP
 
 FN_HOST ?= 192.168.1.229
 FN_SETUP_DIR_NAME ?= fn9_setup
@@ -14,7 +18,7 @@ FN_USER_ME ?= mgering
 
 .PHONY : clean portsnap openvpn clean_openvpn transmission transmission_dirs \
 	clean-transmission jail_sabnzbd update_root_ssh_key fn9_setup \
-	copy_setup_to_f9 mount_setup jail
+	copy_setup_to_f9 mount_setup jail remote_sonarr_jail
 
 help:
 	@echo Hi there
@@ -30,7 +34,8 @@ clean: clean_openvpn clean_transmission
 #######################
 
 remote_setup: update_root_ssh_key copy_setup_to_fn9  create_groups create_users \
-		update_home_dirs remote_transmission_jail remote_sonarr_jail
+		update_home_dirs remote_transmission_jail remote_sonarr_jail \
+		remote_sabnzbd_jail setup_shares
 
 update_root_ssh_key:
 	-./in_host.py update_ssh_key $(FN_HOST) root id_rsa.pub
@@ -58,11 +63,25 @@ create_users:
 	-./in_host.py add_user $(FN_HOST) mgering-dell-bak "Backup for lepton" foo 1010 mgering-dell-bak no
 
 update_home_dirs:
-	$(error Need to update home directories)
+	$(error ******************************* Need to update home directories)
+
+setup_shares: setup_smb_shares setup_nfs_shares
+
+setup_smb_shares:
+	$(error ******************************* Need to setup smb shares)
+
+setup_nfs_shares:
+	$(error ******************************* Need to setup nfs shares)
 
 #############################################################################
 # For each jail...
 #############################################################################
+
+remote_sabnzbd_jail: mount_sabnzbd_setup remote_jail_sabnzbd_services \
+					 remote_jail_sabnzbd_storage
+
+mount_sabnzbd_setup: jail_sabnzbd
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_SABNZBD) $(FN_SETUP_DIR_NAME)
 
 remote_transmission_jail: mount_transmission_setup remote_jail_transmission_services \
 					 remote_jail_transmission_storage remote_jail_openvpn_services \
@@ -71,18 +90,34 @@ remote_transmission_jail: mount_transmission_setup remote_jail_transmission_serv
 mount_transmission_setup: jail_transmission
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
 
-
 remote_sonarr_jail:  mount_sonarr_setup remote_jail_sonarr_services remote_jail_sonarr_storage
 
 mount_sonarr_setup: jail_sonarr
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_SONARR) $(FN_SETUP_DIR_NAME)
 
 #############################################################################
+# The sabnzbd jail
+#############################################################################
+
+jail_sabnzbd:
+	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_SABNZBD) $(JAIL_HOST_SABNZBD_IPV4)
+
+remote_jail_sabnzbd_services:
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_sabnzbd_services
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_sabnzbd_edit_ini
+
+remote_jail_sabnzbd_storage:
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/config /sabnzbd/config
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/watched /sabnzbd/watched
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/incomplete-downloads /sabnzbd/incomplete-downloads
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/media/downloads /sabnzbd/downloads
+
+#############################################################################
 # The sonarr jail
 #############################################################################
 
 jail_sonarr:
-	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_SONARR)
+	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_SONARR) $(JAIL_HOST_SONARR_IPV4)
 
 remote_jail_sonarr_services:
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_sonarr_services
@@ -100,7 +135,7 @@ remote_jail_sonarr_storage:
 #############################################################################
 
 jail_transmission:
-	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_TRANSMISSION)
+	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_TRANSMISSION) $(JAIL_HOST_TRANSMISSION_IPV4)
 
 remote_jail_transmission_services:
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_transmission_services fn9_transmission_settings
@@ -124,6 +159,9 @@ remote_jail_openvpn_storage:
 # Run these within the FreeNAS host
 ###############################################################################
 
+fn9_jail_sabnzbd_services:
+	jexec $(JAIL_HOST_SABNZBD) make -C /root/$(FN_SETUP_DIR_NAME) jail_sabnzbd_services
+
 fn9_jail_sonarr_services:
 	jexec $(JAIL_HOST_SONARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_sonarr_services
 
@@ -141,6 +179,12 @@ fn9_jail_openvpn_services:
 #NOTE: The jail for transvpnmon is the transmission jail
 fn9_jail_transvpnmon_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transvpnmon_services
+
+fn9_sabnzbd_edit_ini:
+	sed -i '' -e "s/\s*dirscan_dir.*/dirscan_dir = \/sabnzbd\/watched/" /mnt/vol1/apps/sabnzbd/config/sabnzbd.ini
+	sed -i '' -e "s/\s*script_dir.*/script_dir = \/sabnzbd\/scripts/" /mnt/vol1/apps/sabnzbd/config/sabnzbd.ini
+	sed -i '' -e "s/\s*complete_dir.*/complete_dir = \/sabnzbd\/downloads/" /mnt/vol1/apps/sabnzbd/config/sabnzbd.ini
+	sed -i '' -e "s/\s*download_dir.*/download_dir = \/sabnzbd\/incomplete-downloads/" /mnt/vol1/apps/sabnzbd/config/sabnzbd.ini
 
 ###############################################################################
 # Run these within the jail
@@ -162,6 +206,7 @@ portsnap: /usr/ports
 ####################
 # sabnzbd
 ####################
+
 sabnzbd_source:
 	-mkdir /tmp/fn9_setup
 	-rm -fr /tmp/fn9_setup/SABnzbd-2.0.0 /tmp/fn9_setup/sabnzbd /usr/local/share/sabnzbd
@@ -170,19 +215,22 @@ sabnzbd_source:
 	  mv SABnzbd-2.0.0 sabnzbd; \
 	  sed -i '' -e "s/#!\/usr\/bin\/python -OO/#!\/usr\/local\/bin\/python2.7 -OO/" sabnzbd/SABnzbd.py; \
 	  mv sabnzbd /usr/local/share/
+	-rm -fr /tmp/fn9_setup
 
-sabnzbd_packages:
+sabnzbd_dependencies:
 	pkg install -y py27-sqlite3 unzip py27-yenc py27-cheetah py27-openssl py27-feedparser py27-utils unrar par2cmdline
+	python2.7 -m ensurepip
+	pip install sabyenc --upgrade
 
-sabnzbd_config: /sabnzbd/config
+sabnzbd_config: /sabnzbd/config /sabnzbd/watched /sabnzbd/incomplete-downloads /sabnzbd/downloads /sabnzbd/scripts
 	cp sabnzbd.rc.d /usr/local/etc/rc.d/sabnzbd
 	./in_jail.py add_sabnzbd_rc_conf
 
-/sabnzbd/config: FORCE
+/sabnzbd/config /sabnzbd/watched /sabnzbd/incomplete-downloads /sabnzbd/downloads /sabnzbd/scripts: FORCE
 	mkdir -p $@
 	chown media:media $@
 
-sabnzbd: sabnzbd_packages sabnzbd_source sabnzbd_config
+jail_sabnzbd_services: sabnzbd_dependencies sabnzbd_source sabnzbd_config
 
 ####################
 # transvpnmon rules

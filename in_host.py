@@ -62,13 +62,13 @@ def cmd_add_storage(args):
     return response
 
 def cmd_create_jail(args):
-    (fn_host, jail_host) = args[0:2]
+    (fn_host, jail_host, jail_ipv4) = args[0:3]
     if get_jail(fn_host, jail_host=jail_host) is not None:
         raise ValueError("Jail '%s' already exists" % jail_host)
     url = "http://%s/api/v1.0/jails/jails/" % (fn_host)
     data = {
         'jail_host': jail_host,
-        'jail_ipv4': 'DHCP',
+        'jail_ipv4': jail_ipv4,
         'jail_autostart': True,
     }
     response = requests.post(url, auth=get_auth(), json=data).json()
