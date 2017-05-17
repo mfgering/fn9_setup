@@ -192,6 +192,9 @@ fn9_jail_sonarr_services:
 fn9_transmission_settings:
 	#NOTE: The transmission daemon must be stopped before updating the settings
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transmission_settings
+	sed -i '' -e "s/\s*\"download-dir\".*/\"download-dir\": \"transmission\/downloads\",/" /mnt/vol1/apps/transmission/config/settings.json
+	sed -i '' -e "s/\s*\"incomplete-dir\".*/\"incomplete-dir\": \"transmission\/incomplete-downloads\",/" /mnt/vol1/apps/transmission/config/settings.json
+	sed -i '' -e "s/\s*\"watch-dir\".*/\"watch-dir\": \"transmission\/watched\",/" /mnt/vol1/apps/transmission/config/settings.json
 
 fn9_jail_transmission_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transmission_services
@@ -237,6 +240,7 @@ sabnzbd_source:
 	cd /tmp/fn9_setup; fetch https://github.com/sabnzbd/sabnzbd/releases/download/2.0.0/SABnzbd-2.0.0-src.tar.gz; \
 	  tar xzf SABnzbd-2.0.0-src.tar.gz; \
 	  mv SABnzbd-2.0.0 sabnzbd; \
+#TODO: Fix this to use command_interpreter in the startup script instead of hacking the shebang
 	  sed -i '' -e "s/#!\/usr\/bin\/python -OO/#!\/usr\/local\/bin\/python2.7 -OO/" sabnzbd/SABnzbd.py; \
 	  mv sabnzbd /usr/local/share/
 	-rm -fr /tmp/fn9_setup
@@ -314,8 +318,7 @@ transmission_dirs: /transmission/config /transmission/watched /transmission/down
 
 jail_transmission_settings:
 	-service transmission stop
-	cp transmission-settings.json /transmission/config/settings.json
-	chown media:media /transmission/config/settings.json
+#NOTE: The settings file is updated outside the jail
 
 clean_transmission:
 	-service transmission stop
@@ -355,7 +358,8 @@ jail_radarr_services: radarr_dirs /usr/local/etc/rc.d/radarr
 
 radarr_dirs: /radarr/config /movies /downloads /mfg-movies
 
-/radarr/config /radarr/config /movies /downloads /mfg-movies: FORCE
+#NOTE: The /downloads directory is already handled by the sonarr rule
+/radarr/config /movies /mfg-movies: FORCE
 	mkdir -p $@
 	chown media:media $@
 
