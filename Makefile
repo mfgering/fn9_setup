@@ -35,7 +35,7 @@ clean: clean_openvpn clean_transmission
 
 remote_setup: update_root_ssh_key copy_setup_to_fn9  create_groups create_users \
 		update_home_dirs remote_transmission_jail remote_sonarr_jail \
-		remote_sabnzbd_jail setup_shares
+		remote_sabnzbd_jail remote_radarr_jail setup_shares
 
 update_root_ssh_key:
 	-./in_host.py update_ssh_key $(FN_HOST) root id_rsa.pub
@@ -95,6 +95,11 @@ remote_sonarr_jail:  mount_sonarr_setup remote_jail_sonarr_services remote_jail_
 mount_sonarr_setup: jail_sonarr
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_SONARR) $(FN_SETUP_DIR_NAME)
 
+remote_radarr_jail:  mount_radarr_setup remote_jail_radarr_services remote_jail_radarr_storage
+
+mount_radarr_setup: jail_radarr
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_RADARR) $(FN_SETUP_DIR_NAME)
+
 #############################################################################
 # The sabnzbd jail
 #############################################################################
@@ -129,6 +134,22 @@ remote_jail_sonarr_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/media/mfg/tv /mfg-tv
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/apps/sonarr/drone-factory /drone-factory
 
+#############################################################################
+# The radarr jail
+#############################################################################
+
+jail_radarr:
+	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_RADARR) $(JAIL_HOST_RADARR_IPV4)
+
+remote_jail_radarr_services:
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_radarr_services
+
+remote_jail_radarr_storage:
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/apps/radarr/config /radarr/config
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/media/downloads /downloads
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/media/movies /movies
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/media/mfg/movies /mfg-movies
+# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/apps/radarr/drone-factory /drone-factory
 
 #############################################################################
 # The transmission jail includes transmission, openvpn, and the proxy server
@@ -158,6 +179,9 @@ remote_jail_openvpn_storage:
 ###############################################################################
 # Run these within the FreeNAS host
 ###############################################################################
+
+fn9_jail_radarr_services:
+	jexec $(JAIL_HOST_RADARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_radarr_services
 
 fn9_jail_sabnzbd_services:
 	jexec $(JAIL_HOST_SABNZBD) make -C /root/$(FN_SETUP_DIR_NAME) jail_sabnzbd_services
@@ -322,6 +346,30 @@ clean_sonarr:
 	-pkg remove -y sonarr
 	rm -fr /sonarr
 	./in_jail.py remove_sonarr_rc_conf
+
+####################
+# radarr rules
+####################
+
+jail_radarr_services: radarr_dirs /usr/local/etc/rc.d/radarr
+
+radarr_dirs: /radarr/config /movies /downloads /mfg-movies
+
+/radarr/config /radarr/config /movies /downloads /mfg-movies: FORCE
+	mkdir -p $@
+	chown media:media $@
+
+/usr/local/etc/rc.d/radarr: /usr/local/etc/rc.d
+	pkg install -y radarr
+	./in_jail.py add_radarr_rc_conf
+	touch /usr/local/etc/rc.d/radarr
+
+clean_radarr:
+	-service radarr stop
+	-pkg remove -y radarr
+	rm -fr /radarr
+	./in_jail.py remove_radarr_rc_conf
+
 
 ##########################
 
