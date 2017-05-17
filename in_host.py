@@ -155,6 +155,24 @@ def cmd_update_ssh_key(args):
     response = requests.put(url, auth=get_auth(), json=data).json()
     return response
 
+def cmd_config_jails(args):
+    (fn_host, jc_path) = args[0:2]
+    url = "http://%s/api/v1.0/jails/configuration/" % (fn_host)
+    response = requests.get(url, auth=get_auth()).json()
+    data = {
+        'jc_path': jc_path,
+    }
+    response = requests.put(url, auth=get_auth(), json=data).json()
+    return response
+
+def cmd_enable_service(args):
+    (fn_host, service_name) = args[0:2]
+    url = "http://%s/api/v1.0/services/services/%s/" % (fn_host, service_name)
+    data = {
+        'srv_enable': True,
+    }
+    response = requests.put(url, auth=get_auth(), json=data).json()
+    return response
 
 def cmd_test(args):
     fn_host = args[0]
@@ -162,7 +180,8 @@ def cmd_test(args):
 
 if __name__ == '__main__':
     commands = ['test', 'create_jail', 'add_storage', 'add_user', 'add_group',
-                'update_ssh_key', 'import_volume']
+                'update_ssh_key', 'import_volume', 'config_jails',
+                'enable_service']
     if len(sys.argv) > 1:
         cmd_name = sys.argv[1]
         if cmd_name not in commands:

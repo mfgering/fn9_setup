@@ -12,18 +12,13 @@ JAIL_HOST_RADARR_IPV4 ?= DHCP
 JAIL_HOST_JACKETT ?= jackett_test
 JAIL_HOST_JACKETT_IPV4 ?= DHCP
 
-FN_HOST ?= 192.168.1.229
+FN_HOST ?= 192.168.1.226
 FN_SETUP_DIR_NAME ?= fn9_setup
 FN_USER_ME ?= mgering
 
 .PHONY : clean portsnap openvpn clean_openvpn transmission transmission_dirs \
 	clean-transmission jail_sabnzbd update_root_ssh_key fn9_setup \
 	copy_setup_to_f9 mount_setup jail remote_sonarr_jail
-
-help:
-	@echo Hi there
-
-clean: clean_openvpn clean_transmission
 
 ###############################################################################
 # Run these remotely
@@ -33,10 +28,9 @@ clean: clean_openvpn clean_transmission
 # FreeNAS 9 setup
 #######################
 
-remote_setup: update_root_ssh_key copy_setup_to_fn9  create_groups create_users \
-        import_vols \
-		update_home_dirs remote_transmission_jail remote_sonarr_jail \
-		remote_sabnzbd_jail remote_radarr_jail setup_shares
+remote_setup: update_root_ssh_key enable_services copy_setup_to_fn9  create_groups create_users \
+		import_vols  \
+		update_home_dirs config_jails setup_jails setup_shares
 
 update_root_ssh_key:
 	-./in_host.py update_ssh_key $(FN_HOST) root id_rsa.pub
@@ -61,22 +55,33 @@ create_users:
 	-./in_host.py add_user $(FN_HOST) marsha "Marsha Ferree" foo 1002 marsha no
 	-./in_host.py add_user $(FN_HOST) meferree-backup "Backup for meferree laptop" foo 1008 meferree-backup no
 	-./in_host.py add_user $(FN_HOST) lepton-backup "Backup for lepton" foo 1009 lepton-backup no
-	-./in_host.py add_user $(FN_HOST) mgering-dell-bak "Backup for lepton" foo 1010 mgering-dell-bak no
+	-./in_host.py add_user $(FN_HOST) mgering-dell-bak "Backup for mgering" foo 1010 mgering-dell-backup no
 
 import_vols:
 	./in_host.py import_volume $(FN_HOST) vol1
 	./in_host.py import_volume $(FN_HOST) vol2
 
+enable_services:
+	./in_host.py enable_service $(FN_HOST) ssh
+	./in_host.py enable_service $(FN_HOST) nfs
+	./in_host.py enable_service $(FN_HOST) cifs
+
+
 update_home_dirs:
-	$(error ******************************* Need to update home directories)
+	$(info ******************************* Need to update home directories)
+
+config_jails:
+	./in_host.py config_jails $(FN_HOST) /mnt/vol1/jails
+
+setup_jails: remote_transmission_jail remote_sonarr_jail remote_sabnzbd_jail remote_radarr_jail
 
 setup_shares: setup_smb_shares setup_nfs_shares
 
 setup_smb_shares:
-	$(error ******************************* Need to setup smb shares)
+	$(info ******************************* Need to setup smb shares)
 
 setup_nfs_shares:
-	$(error ******************************* Need to setup nfs shares)
+	$(info ******************************* Need to setup nfs shares)
 
 #############################################################################
 # For each jail...
@@ -239,13 +244,13 @@ portsnap: /usr/ports
 # sabnzbd
 ####################
 
+#TODO: Fix this to use command_interpreter in the startup script instead of hacking the shebang
 sabnzbd_source:
 	-mkdir /tmp/fn9_setup
 	-rm -fr /tmp/fn9_setup/SABnzbd-2.0.0 /tmp/fn9_setup/sabnzbd /usr/local/share/sabnzbd
 	cd /tmp/fn9_setup; fetch https://github.com/sabnzbd/sabnzbd/releases/download/2.0.0/SABnzbd-2.0.0-src.tar.gz; \
 	  tar xzf SABnzbd-2.0.0-src.tar.gz; \
 	  mv SABnzbd-2.0.0 sabnzbd; \
-#TODO: Fix this to use command_interpreter in the startup script instead of hacking the shebang
 	  sed -i '' -e "s/#!\/usr\/bin\/python -OO/#!\/usr\/local\/bin\/python2.7 -OO/" sabnzbd/SABnzbd.py; \
 	  mv sabnzbd /usr/local/share/
 	-rm -fr /tmp/fn9_setup
