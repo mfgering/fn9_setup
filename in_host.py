@@ -46,6 +46,30 @@ def get_group(fn_host, group_name):
 
 """Commands"""
 
+def cmd_import_volume(args):
+    (fn_host, vol_label) = args[0:2]
+
+    url = "http://%s/api/v1.0/storage/volume/" % (fn_host)
+    response = requests.get(url, auth=get_auth()).json()
+    for vol in response:
+        if vol['vol_name'] == vol_label:
+            return 'Already attached: %s' % vol_label
+    url = "http://%s/api/v1.0/storage/volume_import/" % (fn_host)
+    response = requests.get(url, auth=get_auth()).json()
+    import_vol_data = None
+    for vol in response:
+        if vol['label'] == vol_label:
+            import_vol_data = vol
+            break
+        print(vol['label'])
+    if import_vol_data is None:
+        sys.exit(2)
+    data = {
+        'volume_id': import_vol_data['id'],
+    }
+    response = requests.post(url, auth=get_auth(), json=data).json()
+    return response
+
 def cmd_add_storage(args):
     (fn_host, jail_host, source, dest) = args[0:4]
     for mountpoint in get_mountpoints(fn_host):
@@ -138,7 +162,7 @@ def cmd_test(args):
 
 if __name__ == '__main__':
     commands = ['test', 'create_jail', 'add_storage', 'add_user', 'add_group',
-                'update_ssh_key']
+                'update_ssh_key', 'import_volume']
     if len(sys.argv) > 1:
         cmd_name = sys.argv[1]
         if cmd_name not in commands:

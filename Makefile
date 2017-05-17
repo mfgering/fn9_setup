@@ -34,6 +34,7 @@ clean: clean_openvpn clean_transmission
 #######################
 
 remote_setup: update_root_ssh_key copy_setup_to_fn9  create_groups create_users \
+        import_vols \
 		update_home_dirs remote_transmission_jail remote_sonarr_jail \
 		remote_sabnzbd_jail remote_radarr_jail setup_shares
 
@@ -61,6 +62,10 @@ create_users:
 	-./in_host.py add_user $(FN_HOST) meferree-backup "Backup for meferree laptop" foo 1008 meferree-backup no
 	-./in_host.py add_user $(FN_HOST) lepton-backup "Backup for lepton" foo 1009 lepton-backup no
 	-./in_host.py add_user $(FN_HOST) mgering-dell-bak "Backup for lepton" foo 1010 mgering-dell-bak no
+
+import_vols:
+	./in_host.py import_volume $(FN_HOST) vol1
+	./in_host.py import_volume $(FN_HOST) vol2
 
 update_home_dirs:
 	$(error ******************************* Need to update home directories)
