@@ -115,6 +115,11 @@ remote_radarr_jail:  mount_radarr_setup remote_jail_radarr_services remote_jail_
 mount_radarr_setup: jail_radarr
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_RADARR) $(FN_SETUP_DIR_NAME)
 
+remote_jackett_jail:  mount_jackett_setup remote_jail_jackett_services remote_jail_jackett_storage
+
+mount_jackett_setup: jail_jackett
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_JACKETT) $(FN_SETUP_DIR_NAME)
+
 #############################################################################
 # The sabnzbd jail
 #############################################################################
@@ -388,6 +393,37 @@ clean_radarr:
 	-pkg remove -y radarr
 	rm -fr /radarr
 	./in_jail.py remove_radarr_rc_conf
+
+
+####################
+# jackett rules
+####################
+
+jail_jackett_services: jackett_dirs /usr/local/etc/rc.d/jackett
+
+jackett_dirs: /jackett/config /downloads
+
+#NOTE: The /downloads directory is already handled by the sonarr rule
+/jackett/config /downloads: FORCE
+	mkdir -p $@
+	chown media:media $@
+
+/usr/local/etc/rc.d/jackett: /usr/local/etc/rc.d
+	pkg update
+	pkg upgrade -y
+	pkg install lang/mono ftp/curl
+	./in_jail.py add_jackett_rc_conf
+
+jackett_source:
+	-mkdir /tmp/fn9_setup
+	-rm -fr /tmp/fn9_setup/* /usr/local/share/jackett
+#TODO: FIX THIS!
+	cd /tmp/fn9_setup; fetch https://github.com/Jackett/Jackett/releases/download/v0.7.1422/Jackett.Binaries.Mono.tar.gz; \
+	  tar xzf *.gz; \
+	  mv Jackett jackett; \
+	  mv jackett /usr/local/share/
+	-rm -fr /tmp/fn9_setup
+
 
 
 ##########################
