@@ -29,7 +29,7 @@ FN_USER_ME ?= mgering
 #######################
 
 remote_setup: update_root_ssh_key enable_services copy_setup_to_fn9  create_groups create_users \
-		import_vols  \
+		import_vols update_cifs \
 		update_home_dirs config_jails setup_jails setup_shares
 
 update_root_ssh_key:
@@ -49,6 +49,7 @@ create_groups:
 	-./in_host.py add_group $(FN_HOST) 1008 meferree-backup no
 	-./in_host.py add_group $(FN_HOST) 1009 lepton-backup no
 	-./in_host.py add_group $(FN_HOST) 1010 mgering-dell-backup no
+	-./in_host.py add_group $(FN_HOST) 1011 guest no
 
 create_users:
 	-./in_host.py add_user $(FN_HOST) mgering "Mike Gering" foo 1000 mgering sudo
@@ -56,6 +57,8 @@ create_users:
 	-./in_host.py add_user $(FN_HOST) meferree-backup "Backup for meferree laptop" foo 1008 meferree-backup no
 	-./in_host.py add_user $(FN_HOST) lepton-backup "Backup for lepton" foo 1009 lepton-backup no
 	-./in_host.py add_user $(FN_HOST) mgering-dell-bak "Backup for mgering" foo 1010 mgering-dell-backup no
+	-./in_host.py add_user $(FN_HOST) guest "Guest" foo 1011 guest no
+
 
 import_vols:
 	./in_host.py import_volume $(FN_HOST) vol1
@@ -66,6 +69,8 @@ enable_services:
 	./in_host.py enable_service $(FN_HOST) nfs
 	./in_host.py enable_service $(FN_HOST) cifs
 
+update_cifs:
+	./in_host.py update_cifs $(FN_HOST)
 
 update_home_dirs:
 	$(info ******************************* Need to update home directories)

@@ -46,6 +46,19 @@ def get_group(fn_host, group_name):
 
 """Commands"""
 
+def cmd_update_cifs(args):
+    fn_host = args[0]
+    url = "http://%s/api/v1.0/services/cifs/" % (fn_host)
+    response = requests.get(url, auth=get_auth()).json()
+    #print(response)
+    data = {'cifs_srv_dirmask': '',
+            'cifs_srv_description': 'Alpha FreeNAS Server',
+            'cifs_srv_workgroup': 'WORKGROUP',
+            'cifs_srv_netbiosname': 'Alpha',
+            'cifs_srv_unixcharset': 'UTF-8'}
+    response = requests.put(url, auth=get_auth(), json=data).json()
+    return response
+
 def cmd_import_volume(args):
     (fn_host, vol_label) = args[0:2]
 
@@ -181,7 +194,7 @@ def cmd_test(args):
 if __name__ == '__main__':
     commands = ['test', 'create_jail', 'add_storage', 'add_user', 'add_group',
                 'update_ssh_key', 'import_volume', 'config_jails',
-                'enable_service']
+                'enable_service', 'update_cifs']
     if len(sys.argv) > 1:
         cmd_name = sys.argv[1]
         if cmd_name not in commands:
