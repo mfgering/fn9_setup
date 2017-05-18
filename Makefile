@@ -215,8 +215,18 @@ remote_jail_openvpn_storage:
 # Run these within the FreeNAS host
 ###############################################################################
 
-fn9_jail_jackett_services:
+fn9_jail_jackett_services: /mnt/vol1/apps/jackett/config /mnt/vol1/apps/jackett/blackhole
 	jexec $(JAIL_HOST_JACKETT) make -C /root/$(FN_SETUP_DIR_NAME) jail_jackett_services
+
+/mnt/vol1/apps/jackett/config:
+	mkdir -p $@
+	-mv /mnt/vol1/apps/jackett/Jackett @@
+	-mv /mnt/vol1/apps/jackett/.mono @@
+	chown -R media:media $@
+
+/mnt/vol1/apps/jackett/blackhole:
+	mkdir -p $@
+	chown -R media:media $@
 
 fn9_jail_radarr_services:
 	jexec $(JAIL_HOST_RADARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_radarr_services
