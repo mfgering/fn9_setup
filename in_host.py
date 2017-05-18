@@ -44,6 +44,14 @@ def get_group(fn_host, group_name):
             return group
     return None
 
+def get_cifs_share(fn_host, name):
+    url = "http://%s/api/v1.0/sharing/cifs/" % (fn_host)
+    response = requests.get(url, auth=get_auth()).json()
+    for share in response:
+        if share['cifs_name'] == name:
+            return share
+    return None
+
 """Commands"""
 
 def cmd_update_cifs(args):
@@ -187,6 +195,32 @@ def cmd_enable_service(args):
     response = requests.put(url, auth=get_auth(), json=data).json()
     return response
 
+def cmd_share_cifs_add(args):
+    (fn_host, name, path, guest_ok) = args[0:4]
+    if get_cifs_share(fn_host, name) is not None:
+        raise ValueError("CIFS share %s is already defined." % name)
+    url = "http://%s/api/v1.0/sharing/cifs/" % (fn_host)
+    data = {
+        'cifs_name': name,
+        'cifs_path': path,
+        'cifs_guestok': guest_ok == 'guest_ok'
+    }
+    response = requests.post(url, auth=get_auth(), json=data).json()
+    return response
+
+def cmd_share_nfs_add(args):
+    (fn_host, name, path, guest_ok) = args[0:4]
+    if get_cifs_share(fn_host, name) is not None:
+        raise ValueError("CIFS share %s is already defined." % name)
+    url = "http://%s/api/v1.0/sharing/cifs/" % (fn_host)
+    data = {
+        'cifs_name': name,
+        'cifs_path': path,
+        'cifs_guestok': guest_ok == 'guest_ok'
+    }
+    response = requests.post(url, auth=get_auth(), json=data).json()
+    return response
+
 def cmd_test(args):
     fn_host = args[0]
     print(get_jail(fn_host, jail_host='test'))
@@ -194,7 +228,7 @@ def cmd_test(args):
 if __name__ == '__main__':
     commands = ['test', 'create_jail', 'add_storage', 'add_user', 'add_group',
                 'update_ssh_key', 'import_volume', 'config_jails',
-                'enable_service', 'update_cifs']
+                'enable_service', 'update_cifs', 'share_cifs_add', 'share_nfs_add']
     if len(sys.argv) > 1:
         cmd_name = sys.argv[1]
         if cmd_name not in commands:

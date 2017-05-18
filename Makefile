@@ -84,7 +84,15 @@ setup_jails: remote_transmission_jail remote_sonarr_jail remote_sabnzbd_jail rem
 setup_shares: setup_smb_shares setup_nfs_shares
 
 setup_smb_shares:
-	$(info ******************************* Need to setup smb shares)
+	-./in_host.py share_cifs_add $(FN_HOST) mgering /mnt/vol1/home/mgering guest_ok
+	-./in_host.py share_cifs_add $(FN_HOST) downloads /mnt/vol1/media/downloads guest_ok
+	-./in_host.py share_cifs_add $(FN_HOST) marsha /mnt/vol1/home/marsha guest_ok
+	-./in_host.py share_cifs_add $(FN_HOST) meferree-backup /mnt/vol1/backups/meferree guest_ok
+	-./in_host.py share_cifs_add $(FN_HOST) lepton-backup /mnt/vol1/backups/lepton/lepton-backups nope
+	-./in_host.py share_cifs_add $(FN_HOST) media /mnt/vol1/media guest_ok
+	-./in_host.py share_cifs_add $(FN_HOST) mgering-dell-backup /mnt/vol1/backups/mgering-dell nope
+	-./in_host.py share_cifs_add $(FN_HOST) heap /mnt/vol1/heap guest_ok
+	-./in_host.py share_cifs_add $(FN_HOST) software /mnt/vol1/software guest_ok
 
 setup_nfs_shares:
 	$(info ******************************* Need to setup nfs shares)
