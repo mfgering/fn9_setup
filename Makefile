@@ -11,6 +11,7 @@ JAIL_HOST_RADARR ?= radarr_test
 JAIL_HOST_RADARR_IPV4 ?= DHCP
 JAIL_HOST_JACKETT ?= jackett_test
 JAIL_HOST_JACKETT_IPV4 ?= DHCP
+JACKETT_VERSION ?= v0.7.1422
 
 FN_HOST ?= 192.168.1.226
 FN_SETUP_DIR_NAME ?= fn9_setup
@@ -78,7 +79,7 @@ update_home_dirs:
 config_jails:
 	./in_host.py config_jails $(FN_HOST) /mnt/vol1/jails
 
-setup_jails: remote_transmission_jail remote_sonarr_jail remote_sabnzbd_jail remote_radarr_jail
+setup_jails: remote_transmission_jail remote_sonarr_jail remote_sabnzbd_jail remote_radarr_jail remote_jackett_jail
 
 setup_shares: setup_smb_shares setup_nfs_shares
 
@@ -172,6 +173,20 @@ remote_jail_radarr_storage:
 # 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/apps/radarr/drone-factory /drone-factory
 
 #############################################################################
+# The jackett jail
+#############################################################################
+
+jail_jackett:
+	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_JACKETT) $(JAIL_HOST_JACKETT_IPV4)
+
+remote_jail_jackett_services:
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_jackett_services
+
+remote_jail_jackett_storage:
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_JACKETT) /mnt/vol1/apps/jackett/config /jackett/config
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_JACKETT) /mnt/vol1/apps/jackett/blackhole /jackett/blackhole
+
+#############################################################################
 # The transmission jail includes transmission, openvpn, and the proxy server
 #############################################################################
 
@@ -199,6 +214,9 @@ remote_jail_openvpn_storage:
 ###############################################################################
 # Run these within the FreeNAS host
 ###############################################################################
+
+fn9_jail_jackett_services:
+	jexec $(JAIL_HOST_JACKETT) make -C /root/$(FN_SETUP_DIR_NAME) jail_jackett_services
 
 fn9_jail_radarr_services:
 	jexec $(JAIL_HOST_RADARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_radarr_services
@@ -399,32 +417,28 @@ clean_radarr:
 # jackett rules
 ####################
 
-jail_jackett_services: jackett_dirs /usr/local/etc/rc.d/jackett
+jail_jackett_services: jackett_dirs jackett_source /usr/local/etc/rc.d/jackett
 
-jackett_dirs: /jackett/config /downloads
+jackett_dirs: /jackett/config /jackett/blackhole
 
-#NOTE: The /downloads directory is already handled by the sonarr rule
-/jackett/config /downloads: FORCE
+/jackett/config /jackett/blackhole: FORCE
 	mkdir -p $@
 	chown media:media $@
 
-/usr/local/etc/rc.d/jackett: /usr/local/etc/rc.d
+/usr/local/etc/rc.d/jackett:
 	pkg update
 	pkg upgrade -y
-	pkg install lang/mono ftp/curl
+	pkg install -y lang/mono ftp/curl
+	cp jacket.rc.d /usr/local/etc/rc.d/jackett
 	./in_jail.py add_jackett_rc_conf
 
 jackett_source:
 	-mkdir /tmp/fn9_setup
 	-rm -fr /tmp/fn9_setup/* /usr/local/share/jackett
-#TODO: FIX THIS!
-	cd /tmp/fn9_setup; fetch https://github.com/Jackett/Jackett/releases/download/v0.7.1422/Jackett.Binaries.Mono.tar.gz; \
+	cd /tmp/fn9_setup; fetch https://github.com/Jackett/Jackett/releases/download/$(JACKETT_VERSION)/Jackett.Binaries.Mono.tar.gz; \
 	  tar xzf *.gz; \
-	  mv Jackett jackett; \
-	  mv jackett /usr/local/share/
+	  mv Jackett /usr/local/share/
 	-rm -fr /tmp/fn9_setup
-
-
 
 ##########################
 
