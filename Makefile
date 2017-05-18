@@ -95,7 +95,7 @@ setup_smb_shares:
 	-./in_host.py share_cifs_add $(FN_HOST) software /mnt/vol1/software guest_ok
 
 setup_nfs_shares:
-	$(info ******************************* Need to setup nfs shares)
+	-./in_host.py share_nfs_add $(FN_HOST) /mnt/vol1/media media media
 
 #############################################################################
 # For each jail...
