@@ -455,7 +455,7 @@ jackett_source:
 	-rm -fr /tmp/fn9_setup/* /usr/local/share/jackett
 	cd /tmp/fn9_setup; fetch https://github.com/Jackett/Jackett/releases/download/$(JACKETT_VERSION)/Jackett.Binaries.Mono.tar.gz; \
 	  tar xzf *.gz; \
-	  mv Jackett /usr/local/share/
+	  mv Jackett /usr/local/share/Jackett
 	-rm -fr /tmp/fn9_setup
 
 ##########################
