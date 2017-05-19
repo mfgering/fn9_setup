@@ -95,7 +95,7 @@ setup_smb_shares:
 	-./in_host.py share_cifs_add $(FN_HOST) software /mnt/vol1/software guest_ok
 
 setup_nfs_shares:
-	$(info ******************************* Need to setup nfs shares)
+	-./in_host.py share_nfs_add $(FN_HOST) /mnt/vol1/media media media
 
 #############################################################################
 # For each jail...
@@ -455,7 +455,7 @@ jackett_source:
 	-rm -fr /tmp/fn9_setup/* /usr/local/share/jackett
 	cd /tmp/fn9_setup; fetch https://github.com/Jackett/Jackett/releases/download/$(JACKETT_VERSION)/Jackett.Binaries.Mono.tar.gz; \
 	  tar xzf *.gz; \
-	  mv Jackett /usr/local/share/
+	  mv Jackett /usr/local/share/Jackett
 	-rm -fr /tmp/fn9_setup
 
 ##########################

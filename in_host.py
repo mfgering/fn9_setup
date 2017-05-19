@@ -52,6 +52,14 @@ def get_cifs_share(fn_host, name):
             return share
     return None
 
+def get_nfs_share(fn_host, path):
+    url = "http://%s/api/v1.0/sharing/nfs/" % (fn_host)
+    response = requests.get(url, auth=get_auth()).json()
+    for share in response:
+        if path in share['nfs_paths']:
+            return share
+    return None
+
 """Commands"""
 
 def cmd_update_cifs(args):
@@ -209,14 +217,15 @@ def cmd_share_cifs_add(args):
     return response
 
 def cmd_share_nfs_add(args):
-    (fn_host, name, path, guest_ok) = args[0:4]
-    if get_cifs_share(fn_host, name) is not None:
-        raise ValueError("CIFS share %s is already defined." % name)
-    url = "http://%s/api/v1.0/sharing/cifs/" % (fn_host)
+    (fn_host, path, user, group) = args[0:4]
+    if get_nfs_share(fn_host, path) is not None:
+        raise ValueError("NFS share %s is already defined." % path)
+    url = "http://%s/api/v1.0/sharing/nfs/" % (fn_host)
     data = {
-        'cifs_name': name,
-        'cifs_path': path,
-        'cifs_guestok': guest_ok == 'guest_ok'
+        'nfs_paths': [path],
+        'nfs_mapall_user': user,
+        'nfs_mapall_group': group,
+        'nfs_alldirs': True,
     }
     response = requests.post(url, auth=get_auth(), json=data).json()
     return response
