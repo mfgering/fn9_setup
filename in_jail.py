@@ -24,7 +24,7 @@ def edit_sonarr_rc_conf(conf_filename, write_file=False, add_conf=True):
     settings = [
         ('sonarr_enable', '"YES"'),
         ('sonarr_user', '"media"'),
-        ('sonarr_data_dir`', '"/sonarr/config"'),
+        ('sonarr_data_dir', '"/sonarr/config"'),
     ]
     return edit_rc_conf(conf_filename, settings, write_file, add_conf)
 
