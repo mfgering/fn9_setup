@@ -32,7 +32,7 @@ def edit_radarr_rc_conf(conf_filename, write_file=False, add_conf=True):
     settings = [
         ('radarr_enable', '"YES"'),
         ('radarr_user', '"media"'),
-        ('radarr_data_dir`', '"/radarr/config"'),
+        ('radarr_data_dir', '"/radarr/config"'),
     ]
     return edit_rc_conf(conf_filename, settings, write_file, add_conf)
 
