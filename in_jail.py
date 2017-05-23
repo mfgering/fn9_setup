@@ -51,6 +51,7 @@ def edit_transmission_rc_conf(conf_filename, write_file=False, add_conf=True):
         ('transmission_download_dir', '"/transmission/downloads"'),
         ('transmission_watch_dir', '"/transmission/watched"'),
         ('transmission_user', '"media"'),
+        ('transmission_flags', '"--logfile /transmission/config/transmission.log"'),
     ]
     return edit_rc_conf(conf_filename, settings, write_file, add_conf)
 
