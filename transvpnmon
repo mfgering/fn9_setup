@@ -1,6 +1,8 @@
 #!/bin/sh
 
 # PROVIDE: transvpnmon
+# REQUIRE: transmission
+# REQUIRE: openvpn
 
 . /etc/rc.subr
 
