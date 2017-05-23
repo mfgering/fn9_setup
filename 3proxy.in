@@ -1,0 +1,35 @@
+##Main##
+
+#Starting 3proxy as a service/daemon
+daemon
+
+#DNS Servers to resolve domains and for the local DNS cache
+#that providers faster resolution for cached entries
+nserver 8.8.8.8
+nscache 65536
+
+#Authentication
+#CL = Clear Text, CR = Encrypted Passswords (MD5)
+#Add MD5 users with MD5 passwords with "" (see below)
+#users "user:CR:$1$lFDGlder$pLRb4cU2D7GAT58YQvY49."
+users mgering:CL:foo
+
+#Logging
+log /var/log/3proxy/3proxy.log D
+logformat "- +_L%t.%. %N.%p %E %U %C:%c %R:%r %O %I %h %T"
+rotate 30
+
+#Auth type
+#auth strong = username & password
+auth none
+
+#Binding address
+external 10.4.31.197
+internal 0.0.0.0
+
+#SOCKS5
+auth none
+flush
+allow mgering
+maxconn 384
+socks -p1080

@@ -20,6 +20,26 @@ def status_transmission():
     (so, se) = p.communicate()
     return True if p.returncode == 0 else False
 
+def status_3proxy():
+    """Return True if running, False if not."""
+    p = Popen("service 3proxy status", shell=True, stdout=PIPE, stderr=PIPE)
+    (so, se) = p.communicate()
+    return True if p.returncode == 0 else False
+
+def start_3proxy():
+    if DEBUG:
+        print("Starting 3proxy")
+    p = Popen("service 3proxy start", shell=True, stdout=PIPE, stderr=PIPE)
+    (so, se) = p.communicate()
+    return p.returncode
+
+def stop_3proxy():
+    if DEBUG:
+        print("Stopping 3proxy")
+    p = Popen("service 3proxy stop", shell=True, stdout=PIPE, stderr=PIPE)
+    (so, se) = p.communicate()
+    return p.returncode
+
 def start_transmission():
     if DEBUG:
         print("Starting transmission")
@@ -67,6 +87,26 @@ def update_transmission_bind_addr(addr, settings_file='/transmission/config/sett
                 print("Updated transmission settings for %s" % addr)
     return result
 
+def update_3proxy_bind_addr(addr, cfg_file='/usr/local/etc/3proxy.cfg', try_stop_3proxy=True):
+    """Update the transmission settings and return True if changed."""
+    result = False
+    pattern = r'(.*external )(.*?)(\n.*)'
+    p = re.compile(pattern, re.DOTALL)
+    with open(cfg_file) as f:
+        contents = f.read()
+    m = p.match(contents)
+    bind_ip = m.group(2)
+    if bind_ip != addr:
+        if try_stop_3proxy and status_3proxy():
+            stop_3proxy()
+        updated_contents = m.group(1)+addr+m.group(3)
+        with open(cfg_file, 'w') as f:
+            f.write(updated_contents)
+            result = True
+            if DEBUG:
+                print("Updated 3proxy settings for %s" % addr)
+    return result
+
 def run():
     while True:
         tun_ip = get_tun_ip()
@@ -79,9 +119,8 @@ def run():
             is_updated = update_transmission_bind_addr(tun_ip)
             if is_updated or not status_transmission():
                 start_transmission()
-            else:
-                if DEBUG:
-                    print("Transmission/openvpn are ok")
+            if is_updated or not status_3proxy():
+                start_3proxy()
         time.sleep(30)
 
 if __name__ == "__main__":
