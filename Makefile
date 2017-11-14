@@ -1,20 +1,20 @@
 
 
 .DEFAULT_GOAL := help
-JAIL_HOST_TRANSMISSION ?= transmission
+JAIL_HOST_TRANSMISSION ?= transmission2
 JAIL_HOST_TRANSMISSION_IPV4 ?= DHCP
-JAIL_HOST_SABNZBD ?= sabnzbd
+JAIL_HOST_SABNZBD ?= sabnzbd2
 JAIL_HOST_SABNZBD_IPV4 ?= DHCP
-JAIL_HOST_SONARR ?= sonarr
+JAIL_HOST_SONARR ?= sonarr2
 JAIL_HOST_SONARR_IPV4 ?= DHCP
-JAIL_HOST_RADARR ?= radarr
+JAIL_HOST_RADARR ?= radarr2
 JAIL_HOST_RADARR_IPV4 ?= DHCP
-JAIL_HOST_JACKETT ?= jackett
+JAIL_HOST_JACKETT ?= jackett2
 JAIL_HOST_JACKETT_IPV4 ?= DHCP
 JACKETT_VERSION ?= v0.7.1422
 
-FN_HOST ?= 192.168.1.12
-FN_SETUP_DIR_NAME ?= fn9_setup
+FN_HOST ?= 192.168.1.226
+FN_SETUP_DIR_NAME ?= fn11_setup
 FN_USER_ME ?= mgering
 
 .PHONY : clean portsnap openvpn clean_openvpn transmission transmission_dirs \
@@ -291,6 +291,7 @@ portsnap: /usr/ports
 ####################
 
 #TODO: Fix this to use command_interpreter in the startup script instead of hacking the shebang
+#TODO: Update to latest release 2.3.1:
 sabnzbd_source:
 	-mkdir /tmp/fn9_setup
 	-rm -fr /tmp/fn9_setup/SABnzbd-2.0.0 /tmp/fn9_setup/sabnzbd /usr/local/share/sabnzbd
