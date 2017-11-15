@@ -13,7 +13,8 @@ JAIL_HOST_JACKETT ?= jackett2
 JAIL_HOST_JACKETT_IPV4 ?= DHCP
 JACKETT_VERSION ?= v0.7.1422
 
-FN_HOST ?= 192.168.1.226
+#FN_HOST ?= 192.168.1.226
+FN_HOST ?= 192.168.1.12
 FN_SETUP_DIR_NAME ?= fn11_setup
 FN_USER_ME ?= mgering
 
@@ -28,6 +29,8 @@ FN_USER_ME ?= mgering
 #######################
 # FreeNAS 9 setup
 #######################
+
+remote_jails: copy_setup_to_fn9 config_jails setup_jails
 
 remote_setup: update_root_ssh_key enable_services copy_setup_to_fn9  create_groups create_users \
 		import_vols update_cifs \
@@ -109,7 +112,7 @@ mount_sabnzbd_setup: jail_sabnzbd
 
 remote_transmission_jail: mount_transmission_setup remote_jail_transmission_services \
 					 remote_jail_transmission_storage remote_jail_openvpn_services \
-					 remote_jail_openvpn_storage remote_jail_transvpnmon_services
+					 remote_jail_openvpn_storage remote_jail_3proxy_services remote_jail_transvpnmon_services
 
 mount_transmission_setup: jail_transmission
 	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
@@ -162,6 +165,8 @@ remote_jail_sonarr_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/media/tv /tv
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/media/mfg/tv /mfg-tv
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/apps/sonarr/drone-factory /drone-factory
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/media/downloads /transmission/downloads
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/apps/sabnzbd/downloads /sabnzbd/downloads
 
 #############################################################################
 # The radarr jail
@@ -178,7 +183,9 @@ remote_jail_radarr_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/media/downloads /downloads
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/media/movies /movies
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/media/mfg/movies /mfg-movies
-# 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/apps/radarr/drone-factory /drone-factory
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/apps/radarr/drone-factory /radarr/drone-factory
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/media/downloads /transmission/downloads
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/apps/sabnzbd/downloads /sabnzbd/downloads
 
 #############################################################################
 # The jackett jail
@@ -215,6 +222,9 @@ remote_jail_transvpnmon_services:
 
 remote_jail_openvpn_services:
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_openvpn_services
+
+remote_jail_3proxy_services:
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_3proxy_services
 
 remote_jail_openvpn_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/openvpn /openvpn
@@ -259,6 +269,10 @@ fn9_jail_transmission_services:
 fn9_jail_openvpn_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_openvpn_services
 
+#NOTE: The jail for 3proxy is the transmission jail
+fn9_jail_3proxy_services:
+	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_3proxy_services
+
 #NOTE: The jail for transvpnmon is the transmission jail
 fn9_jail_transvpnmon_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transvpnmon_services
@@ -291,7 +305,6 @@ portsnap: /usr/ports
 ####################
 
 #TODO: Fix this to use command_interpreter in the startup script instead of hacking the shebang
-#TODO: Update to latest release 2.3.1:
 sabnzbd_source:
 	-mkdir /tmp/fn9_setup
 	-rm -fr /tmp/fn9_setup/SABnzbd-2.3.1 /tmp/fn9_setup/sabnzbd /usr/local/share/sabnzbd
@@ -356,6 +369,29 @@ clean_openvpn:
 
 
 ####################
+# 3proxy rules
+####################
+
+/usr/local/etc/rc.d/3proxy: /usr/local/etc/rc.d
+	pkg install -y 3proxy
+	./in_jail.py add_3proxy_rc_conf
+
+jail_3proxy_services: /usr/local/etc/rc.d/3proxy /usr/local/etc/3proxy.cfg /var/log/3proxy
+	@echo 3proxy installed
+
+/var/log/3proxy:
+	-mkdir /var/log/3proxy
+
+/usr/local/etc/3proxy.cfg: FORCE
+	cp 3proxy.in /usr/local/etc/3proxy.cfg
+
+clean_3proxy:
+	-service 3proxy stop
+	-pkg remove -y 3proxy
+	./in_jail.py remove_3proxy_rc_conf
+
+
+####################
 # transmission rules
 ####################
 
@@ -390,7 +426,7 @@ clean_transmission:
 
 jail_sonarr_services: sonarr_dirs /usr/local/etc/rc.d/sonarr
 
-sonarr_dirs: /sonarr/config /tv /downloads /drone-factory /mfg-tv
+sonarr_dirs: /sonarr/config /tv /downloads /drone-factory /mfg-tv /drone-factory /transmission/downloads /sabnzbd/downloads
 
 /sonarr/config /tv /downloads /drone-factory /mfg-tv: FORCE
 	mkdir -p $@
@@ -413,10 +449,10 @@ clean_sonarr:
 
 jail_radarr_services: radarr_dirs /usr/local/etc/rc.d/radarr
 
-radarr_dirs: /radarr/config /movies /downloads /mfg-movies
+radarr_dirs: /radarr/config /radarr/drone-factory /movies /downloads /mfg-movies /sabnzbd/downloads /transmission/downloads
 
 #NOTE: The /downloads directory is already handled by the sonarr rule
-/radarr/config /movies /mfg-movies: FORCE
+/radarr/config /movies /mfg-movies /radarr/drone-factory: FORCE
 	mkdir -p $@
 	chown media:media $@
 

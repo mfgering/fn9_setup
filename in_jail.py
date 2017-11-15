@@ -44,6 +44,12 @@ def edit_openvpn_rc_conf(conf_filename, write_file=False, add_conf=True):
     ]
     return edit_rc_conf(conf_filename, settings, write_file, add_conf)
 
+def edit_3proxy_rc_conf(conf_filename, write_file=False, add_conf=True):
+    settings = [
+        ('threeproxy_enable', '"YES"'),
+    ]
+    return edit_rc_conf(conf_filename, settings, write_file, add_conf)
+
 def edit_transmission_rc_conf(conf_filename, write_file=False, add_conf=True):
     settings = [
         ('transmission_enable', '"YES"'),
@@ -91,6 +97,9 @@ def cmd_add_sonarr_rc_conf(*args):
 def cmd_add_openvpn_rc_conf(*args):
     edit_openvpn_rc_conf('/etc/rc.conf', write_file=True)
 
+def cmd_add_3proxy_rc_conf(*args):
+    edit_3proxy_rc_conf('/etc/rc.conf', write_file=True)
+
 def cmd_add_transmission_rc_conf(*args):
     edit_transmission_rc_conf('/etc/rc.conf', write_file=True)
 
@@ -99,6 +108,9 @@ def cmd_add_sabnzbd_rc_conf(*args):
 
 def cmd_remove_openvpn_rc_conf(*args):
     edit_openvpn_rc_conf('/etc/rc.conf', write_file=True, add_conf=False)
+
+def cmd_remove_3proxy_rc_conf(*args):
+    edit_3proxy_rc_conf('/etc/rc.conf', write_file=True, add_conf=False)
 
 def cmd_remove_transmission_rc_conf(*args):
     edit_transmission_rc_conf('/etc/rc.conf', write_file=True, add_conf=False)
@@ -112,6 +124,7 @@ def cmd_test(args):
 if __name__ == '__main__':
 
     commands = ['test', 'add_openvpn_rc_conf', 'add_transmission_rc_conf',
+                'add_3proxy_rc_conf', 'remove_3proxy_rc_conf',
                 'add_sabnzbd_rc_conf', 'remove_openvpn_rc_conf',
                 'remove_transmission_rc_conf', 'remove_sabnzbd_rc_conf',
                 'add_transvpnmon_rc_conf', 'add_sonarr_rc_conf', 'add_radarr_rc_conf',

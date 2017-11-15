@@ -88,7 +88,7 @@ def update_transmission_bind_addr(addr, settings_file='/transmission/config/sett
     return result
 
 def update_3proxy_bind_addr(addr, cfg_file='/usr/local/etc/3proxy.cfg', try_stop_3proxy=True):
-    """Update the transmission settings and return True if changed."""
+    """Update the 3proxy settings and return True if changed."""
     result = False
     pattern = r'(.*external )(.*?)(\n.*)'
     p = re.compile(pattern, re.DOTALL)
@@ -117,6 +117,7 @@ def run():
             # Note: check addr next iteration
         else:
             is_updated = update_transmission_bind_addr(tun_ip)
+            is_updated = update_3proxy_bind_addr(tun_ip) or is_updated
             if is_updated or not status_transmission():
                 start_transmission()
             if is_updated or not status_3proxy():
