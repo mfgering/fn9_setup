@@ -294,10 +294,10 @@ portsnap: /usr/ports
 #TODO: Update to latest release 2.3.1:
 sabnzbd_source:
 	-mkdir /tmp/fn9_setup
-	-rm -fr /tmp/fn9_setup/SABnzbd-2.0.0 /tmp/fn9_setup/sabnzbd /usr/local/share/sabnzbd
-	cd /tmp/fn9_setup; fetch https://github.com/sabnzbd/sabnzbd/releases/download/2.0.0/SABnzbd-2.0.0-src.tar.gz; \
-	  tar xzf SABnzbd-2.0.0-src.tar.gz; \
-	  mv SABnzbd-2.0.0 sabnzbd; \
+	-rm -fr /tmp/fn9_setup/SABnzbd-2.3.1 /tmp/fn9_setup/sabnzbd /usr/local/share/sabnzbd
+	cd /tmp/fn9_setup; fetch https://github.com/sabnzbd/sabnzbd/releases/download/2.3.1/SABnzbd-2.3.1-src.tar.gz; \
+	  tar xzf SABnzbd-2.3.1-src.tar.gz; \
+	  mv SABnzbd-2.3.1 sabnzbd; \
 	  sed -i '' -e "s/#!\/usr\/bin\/python -OO/#!\/usr\/local\/bin\/python2.7 -OO/" sabnzbd/SABnzbd.py; \
 	  mv sabnzbd /usr/local/share/
 	-rm -fr /tmp/fn9_setup
