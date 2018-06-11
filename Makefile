@@ -316,7 +316,7 @@ sabnzbd_source:
 	-rm -fr /tmp/fn9_setup
 
 sabnzbd_dependencies:
-	pkg install -y py27-sqlite3 unzip py27-yenc py27-cheetah py27-openssl py27-feedparser py27-utils unrar par2cmdline
+	pkg install -y py27-sqlite3 unzip py27-yenc py27-cheetah py27-openssl py27-feedparser py27-utils unrar par2cmdline bash
 	python2.7 -m ensurepip
 	pip install sabyenc --upgrade
 
