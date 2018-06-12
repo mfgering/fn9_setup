@@ -13,14 +13,14 @@ JAIL_HOST_JACKETT ?= jackett2
 JAIL_HOST_JACKETT_IPV4 ?= DHCP
 JACKETT_VERSION ?= v0.7.1422
 
-FN_HOST ?= 192.168.1.226
+FN_HOST ?= 192.168.1.221
 #FN_HOST ?= 192.168.1.12
 FN_SETUP_DIR_NAME ?= fn11_setup
 FN_USER_ME ?= mgering
 
 .PHONY : clean portsnap openvpn clean_openvpn transmission transmission_dirs \
-	clean-transmission jail_sabnzbd update_root_ssh_key fn9_setup \
-	copy_setup_to_f9 mount_setup jail remote_sonarr_jail
+	clean-transmission jail_sabnzbd update_root_ssh_key fn11_setup \
+	copy_setup_to_fn11 mount_setup jail remote_sonarr_jail
 
 ###############################################################################
 # Run these remotely
@@ -30,16 +30,16 @@ FN_USER_ME ?= mgering
 # FreeNAS 9 setup
 #######################
 
-remote_jails: copy_setup_to_fn9 config_jails setup_jails
+remote_jails: copy_setup_to_fn11 config_jails setup_jails
 
-remote_setup: update_root_ssh_key enable_services copy_setup_to_fn9  create_groups create_users \
+remote_setup: update_root_ssh_key enable_services copy_setup_to_fn11  create_groups create_users \
 		import_vols update_cifs \
 		update_home_dirs config_jails setup_jails setup_shares
 
 update_root_ssh_key:
 	-./in_host.py update_ssh_key $(FN_HOST) root id_rsa.pub
 
-copy_setup_to_fn9:
+copy_setup_to_fn11:
 	-ssh root@$(FN_HOST) mkdir $(FN_SETUP_DIR_NAME)
 	scp -r -p * root@$(FN_HOST):$(FN_SETUP_DIR_NAME)/
 
@@ -108,29 +108,29 @@ remote_sabnzbd_jail: mount_sabnzbd_setup remote_jail_sabnzbd_services \
 					 remote_jail_sabnzbd_storage
 
 mount_sabnzbd_setup: jail_sabnzbd
-	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_SABNZBD) $(FN_SETUP_DIR_NAME)
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn11_host_make_mount.sh $(JAIL_HOST_SABNZBD) $(FN_SETUP_DIR_NAME)
 
 remote_transmission_jail: mount_transmission_setup remote_jail_transmission_services \
 					 remote_jail_transmission_storage remote_jail_openvpn_services \
 					 remote_jail_openvpn_storage remote_jail_3proxy_services remote_jail_transvpnmon_services
 
 mount_transmission_setup: jail_transmission
-	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn11_host_make_mount.sh $(JAIL_HOST_TRANSMISSION) $(FN_SETUP_DIR_NAME)
 
 remote_sonarr_jail:  mount_sonarr_setup remote_jail_sonarr_services remote_jail_sonarr_storage
 
 mount_sonarr_setup: jail_sonarr
-	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_SONARR) $(FN_SETUP_DIR_NAME)
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn11_host_make_mount.sh $(JAIL_HOST_SONARR) $(FN_SETUP_DIR_NAME)
 
 remote_radarr_jail:  mount_radarr_setup remote_jail_radarr_services remote_jail_radarr_storage
 
 mount_radarr_setup: jail_radarr
-	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_RADARR) $(FN_SETUP_DIR_NAME)
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn11_host_make_mount.sh $(JAIL_HOST_RADARR) $(FN_SETUP_DIR_NAME)
 
 remote_jackett_jail:  mount_jackett_setup remote_jail_jackett_services remote_jail_jackett_storage
 
 mount_jackett_setup: jail_jackett
-	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn9_host_make_mount.sh $(JAIL_HOST_JACKETT) $(FN_SETUP_DIR_NAME)
+	ssh root@$(FN_HOST) $(FN_SETUP_DIR_NAME)/fn11_host_make_mount.sh $(JAIL_HOST_JACKETT) $(FN_SETUP_DIR_NAME)
 
 #############################################################################
 # The sabnzbd jail
@@ -140,8 +140,8 @@ jail_sabnzbd:
 	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_SABNZBD) $(JAIL_HOST_SABNZBD_IPV4)
 
 remote_jail_sabnzbd_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_sabnzbd_services
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_sabnzbd_edit_ini
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_sabnzbd_services
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_sabnzbd_edit_ini
 
 remote_jail_sabnzbd_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/config /sabnzbd/config
@@ -157,7 +157,7 @@ jail_sonarr:
 	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_SONARR) $(JAIL_HOST_SONARR_IPV4)
 
 remote_jail_sonarr_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_sonarr_services
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_sonarr_services
 
 remote_jail_sonarr_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SONARR) /mnt/vol1/apps/sonarr/config /sonarr/config
@@ -176,7 +176,7 @@ jail_radarr:
 	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_RADARR) $(JAIL_HOST_RADARR_IPV4)
 
 remote_jail_radarr_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_radarr_services
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_radarr_services
 
 remote_jail_radarr_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_RADARR) /mnt/vol1/apps/radarr/config /radarr/config
@@ -195,7 +195,7 @@ jail_jackett:
 	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_JACKETT) $(JAIL_HOST_JACKETT_IPV4)
 
 remote_jail_jackett_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_jackett_services
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_jackett_services
 
 remote_jail_jackett_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_JACKETT) /mnt/vol1/apps/jackett/config /jackett/config
@@ -209,7 +209,7 @@ jail_transmission:
 	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_TRANSMISSION) $(JAIL_HOST_TRANSMISSION_IPV4)
 
 remote_jail_transmission_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_transmission_services fn9_transmission_settings
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_transmission_services fn11_transmission_settings
 
 remote_jail_transmission_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/config /transmission/config
@@ -218,13 +218,13 @@ remote_jail_transmission_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/transmission/watched /transmission/watched
 
 remote_jail_transvpnmon_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_transvpnmon_services
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_transvpnmon_services
 
 remote_jail_openvpn_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_openvpn_services
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_openvpn_services
 
 remote_jail_3proxy_services:
-	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn9_jail_3proxy_services
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_3proxy_services
 
 remote_jail_openvpn_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_TRANSMISSION) /mnt/vol1/apps/openvpn /openvpn
@@ -233,7 +233,7 @@ remote_jail_openvpn_storage:
 # Run these within the FreeNAS host
 ###############################################################################
 
-fn9_jail_jackett_services: /mnt/vol1/apps/jackett/config /mnt/vol1/apps/jackett/blackhole
+fn11_jail_jackett_services: /mnt/vol1/apps/jackett/config /mnt/vol1/apps/jackett/blackhole
 	jexec $(JAIL_HOST_JACKETT) make -C /root/$(FN_SETUP_DIR_NAME) jail_jackett_services
 
 /mnt/vol1/apps/jackett/config:
@@ -246,38 +246,38 @@ fn9_jail_jackett_services: /mnt/vol1/apps/jackett/config /mnt/vol1/apps/jackett/
 	mkdir -p $@
 	chown -R media:media $@
 
-fn9_jail_radarr_services:
+fn11_jail_radarr_services:
 	jexec $(JAIL_HOST_RADARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_radarr_services
 
-fn9_jail_sabnzbd_services:
+fn11_jail_sabnzbd_services:
 	jexec $(JAIL_HOST_SABNZBD) make -C /root/$(FN_SETUP_DIR_NAME) jail_sabnzbd_services
 
-fn9_jail_sonarr_services:
+fn11_jail_sonarr_services:
 	jexec $(JAIL_HOST_SONARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_sonarr_services
 
-fn9_transmission_settings:
+fn11_transmission_settings:
 	#NOTE: The transmission daemon must be stopped before updating the settings
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transmission_settings
 	sed -i '' -e "s/\s*\"download-dir\".*/\"download-dir\": \"transmission\/downloads\",/" /mnt/vol1/apps/transmission/config/settings.json
 	sed -i '' -e "s/\s*\"incomplete-dir\".*/\"incomplete-dir\": \"transmission\/incomplete-downloads\",/" /mnt/vol1/apps/transmission/config/settings.json
 	sed -i '' -e "s/\s*\"watch-dir\".*/\"watch-dir\": \"transmission\/watched\",/" /mnt/vol1/apps/transmission/config/settings.json
 
-fn9_jail_transmission_services:
+fn11_jail_transmission_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transmission_services
 
 #NOTE: The jail for openvpn is the transmission jail
-fn9_jail_openvpn_services:
+fn11_jail_openvpn_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_openvpn_services
 
 #NOTE: The jail for 3proxy is the transmission jail
-fn9_jail_3proxy_services:
+fn11_jail_3proxy_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_3proxy_services
 
 #NOTE: The jail for transvpnmon is the transmission jail
-fn9_jail_transvpnmon_services:
+fn11_jail_transvpnmon_services:
 	jexec $(JAIL_HOST_TRANSMISSION) make -C /root/$(FN_SETUP_DIR_NAME) jail_transvpnmon_services
 
-fn9_sabnzbd_edit_ini:
+fn11_sabnzbd_edit_ini:
 	sed -i '' -e "s/\s*dirscan_dir.*/dirscan_dir = \/sabnzbd\/watched/" /mnt/vol1/apps/sabnzbd/config/sabnzbd.ini
 	sed -i '' -e "s/\s*script_dir.*/script_dir = \/sabnzbd\/scripts/" /mnt/vol1/apps/sabnzbd/config/sabnzbd.ini
 	sed -i '' -e "s/\s*complete_dir.*/complete_dir = \/sabnzbd\/downloads/" /mnt/vol1/apps/sabnzbd/config/sabnzbd.ini
@@ -306,14 +306,20 @@ portsnap: /usr/ports
 
 #TODO: Fix this to use command_interpreter in the startup script instead of hacking the shebang
 sabnzbd_source:
-	-mkdir /tmp/fn9_setup
-	-rm -fr /tmp/fn9_setup/SABnzbd-2.3.1 /tmp/fn9_setup/sabnzbd /usr/local/share/sabnzbd
-	cd /tmp/fn9_setup; fetch https://github.com/sabnzbd/sabnzbd/releases/download/2.3.2/SABnzbd-2.3.2-src.tar.gz; \
+	./update_sabnzbd.sh
+
+sabnzbd_source_old:
+	-mkdir /tmp/fn11_setup
+	-rm -fr /tmp/fn11_setup/SABnzbd-2.3.1 /tmp/fn11_setup/sabnzbd /usr/local/share/sabnzbd
+	cd /tmp/fn11_setup; fetch https://github.com/sabnzbd/sabnzbd/releases/download/2.3.2/SABnzbd-2.3.2-src.tar.gz; \
 	  tar xzf SABnzbd-2.3.2-src.tar.gz; \
 	  mv SABnzbd-2.3.2 sabnzbd; \
 	  sed -i '' -e "s/#!\/usr\/bin\/python -OO/#!\/usr\/local\/bin\/python2.7 -OO/" sabnzbd/SABnzbd.py; \
 	  mv sabnzbd /usr/local/share/
-	-rm -fr /tmp/fn9_setup
+	-rm -fr /tmp/fn11_setup
+
+sabnzbd_update:
+	./update_sabnzbd.sh
 
 sabnzbd_dependencies:
 	pkg install -y py27-sqlite3 unzip py27-yenc py27-cheetah py27-openssl py27-feedparser py27-utils unrar par2cmdline bash
@@ -488,12 +494,12 @@ jackett_dirs: /jackett/config /jackett/blackhole
 	./in_jail.py add_jackett_rc_conf
 
 jackett_source:
-	-mkdir /tmp/fn9_setup
-	-rm -fr /tmp/fn9_setup/* /usr/local/share/jackett
-	cd /tmp/fn9_setup; fetch https://github.com/Jackett/Jackett/releases/download/$(JACKETT_VERSION)/Jackett.Binaries.Mono.tar.gz; \
+	-mkdir /tmp/fn11_setup
+	-rm -fr /tmp/fn11_setup/* /usr/local/share/jackett
+	cd /tmp/fn11_setup; fetch https://github.com/Jackett/Jackett/releases/download/$(JACKETT_VERSION)/Jackett.Binaries.Mono.tar.gz; \
 	  tar xzf *.gz; \
 	  mv Jackett /usr/local/share/Jackett
-	-rm -fr /tmp/fn9_setup
+	-rm -fr /tmp/fn11_setup
 
 ##########################
 
