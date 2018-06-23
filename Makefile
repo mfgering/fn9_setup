@@ -147,7 +147,7 @@ remote_jail_sabnzbd_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/config /sabnzbd/config
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/watched /sabnzbd/watched
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/incomplete-downloads /sabnzbd/incomplete-downloads
-	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/downloads /sabnzbd/downloads
+	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/media/downloads /sabnzbd/downloads
 
 #############################################################################
 # The sonarr jail
