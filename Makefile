@@ -27,8 +27,10 @@ FN_USER_ME ?= mgering
 ###############################################################################
 
 #######################
-# FreeNAS 9 setup
+# FreeNAS 11 setup
 #######################
+
+update_sabnzbd: copy_setup_to_fn11 remote_jail_sabnzbd_update
 
 remote_jails: copy_setup_to_fn11 config_jails setup_jails
 
@@ -143,6 +145,9 @@ remote_jail_sabnzbd_services:
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_sabnzbd_services
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_sabnzbd_edit_ini
 
+remote_jail_sabnzbd_update:
+	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_sabnzbd_update
+
 remote_jail_sabnzbd_storage:
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/config /sabnzbd/config
 	-./in_host.py add_storage $(FN_HOST) $(JAIL_HOST_SABNZBD) /mnt/vol1/apps/sabnzbd/watched /sabnzbd/watched
@@ -252,6 +257,9 @@ fn11_jail_radarr_services:
 fn11_jail_sabnzbd_services:
 	jexec $(JAIL_HOST_SABNZBD) make -C /root/$(FN_SETUP_DIR_NAME) jail_sabnzbd_services
 
+fn11_jail_sabnzbd_update:
+	jexec $(JAIL_HOST_SABNZBD) /root/$(FN_SETUP_DIR_NAME)/update_sabnzbd.sh
+
 fn11_jail_sonarr_services:
 	jexec $(JAIL_HOST_SONARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_sonarr_services
 
@@ -304,19 +312,8 @@ portsnap: /usr/ports
 # sabnzbd
 ####################
 
-#TODO: Fix this to use command_interpreter in the startup script instead of hacking the shebang
 sabnzbd_source:
 	./update_sabnzbd.sh
-
-sabnzbd_source_old:
-	-mkdir /tmp/fn11_setup
-	-rm -fr /tmp/fn11_setup/SABnzbd-2.3.1 /tmp/fn11_setup/sabnzbd /usr/local/share/sabnzbd
-	cd /tmp/fn11_setup; fetch https://github.com/sabnzbd/sabnzbd/releases/download/2.3.2/SABnzbd-2.3.2-src.tar.gz; \
-	  tar xzf SABnzbd-2.3.2-src.tar.gz; \
-	  mv SABnzbd-2.3.2 sabnzbd; \
-	  sed -i '' -e "s/#!\/usr\/bin\/python -OO/#!\/usr\/local\/bin\/python2.7 -OO/" sabnzbd/SABnzbd.py; \
-	  mv sabnzbd /usr/local/share/
-	-rm -fr /tmp/fn11_setup
 
 sabnzbd_update:
 	./update_sabnzbd.sh
