@@ -3,7 +3,7 @@
 #       Update the version variable according
 
 function current_version {
-    pkg_info='/usr/local/sabnzbd/PKG-INFO'
+    pkg_info='/usr/local/share/sabnzbd/PKG-INFO'
     if [ ! -f "$pkg_info" ]; then
         pkg_info="./tests/files/PKG-INFO"
         if [ ! -f "$pkg_info" ]; then
