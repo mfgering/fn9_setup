@@ -30,7 +30,7 @@ FN_USER_ME ?= mgering
 # FreeNAS 11 setup
 #######################
 
-update_sabnzbd: copy_setup_to_fn11 remote_jail_sabnzbd_update
+update_sabnzbd: copy_setup_to_fn11 mount_sabnzbd_setup remote_jail_sabnzbd_update
 
 remote_jails: copy_setup_to_fn11 config_jails setup_jails
 
