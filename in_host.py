@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python
 
 #!/usr/bin/env python2.7
 import sys
@@ -15,12 +15,12 @@ def get_jail(fn_host, jail_host=None, id=None):
         raise ValueError("Must have one of jail_host or id args")
     jails = get_jails(fn_host)
     for jail in jails:
-        if jail_host == jail['jail_host'] or id == str(jail['id']):
+        if jail_host == jail['host_hostname'] or id == str(jail['id']):
             return jail
     return None
 
 def get_jails(fn_host):
-    url = "http://%s/api/v1.0/jails/jails/" % (fn_host)
+    url = "http://%s/api/v2.0/jail" % (fn_host)
     response = requests.get(url, auth=get_auth()).json()
     return response
 
@@ -120,11 +120,14 @@ def cmd_create_jail(args):
     (fn_host, jail_host, jail_ipv4) = args[0:3]
     if get_jail(fn_host, jail_host=jail_host) is not None:
         raise ValueError("Jail '%s' already exists" % jail_host)
-    url = "http://%s/api/v1.0/jails/jails/" % (fn_host)
+    url = "http://%s/api/v2.0/jail" % (fn_host)
+    #TODO: How to set dhcp parm?
     data = {
-        'jail_host': jail_host,
-        'jail_ipv4': jail_ipv4,
-        'jail_autostart': True,
+        'release': '11.2-RELEASE',
+        'uuid': jail_host,
+        'props': [
+            'vnet=on', 'dhcp=on', 'bpf=yes'
+        ]
     }
     response = requests.post(url, auth=get_auth(), json=data).json()
     return response

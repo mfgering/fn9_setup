@@ -91,3 +91,4 @@ ENV/
 .idea
 
 build/
+local_settings.py

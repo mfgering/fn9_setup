@@ -3,15 +3,14 @@
 .DEFAULT_GOAL := help
 JAIL_HOST_TRANSMISSION ?= transmission2
 JAIL_HOST_TRANSMISSION_IPV4 ?= DHCP
-JAIL_HOST_SABNZBD ?= sabnzbd2
+JAIL_HOST_SABNZBD ?= sabnzbd
 JAIL_HOST_SABNZBD_IPV4 ?= DHCP
-JAIL_HOST_SONARR ?= sonarr2
-JAIL_HOST_SONARR_IPV4 ?= DHCP
-JAIL_HOST_RADARR ?= radarr2
+JAIL_HOST_SONARR ?= sonarr
+JAIL_HOST_RADARR ?= radarr
 JAIL_HOST_RADARR_IPV4 ?= DHCP
-JAIL_HOST_JACKETT ?= jackett2
+JAIL_HOST_JACKETT ?= jackett
 JAIL_HOST_JACKETT_IPV4 ?= DHCP
-JACKETT_VERSION ?= v0.7.1422
+JACKETT_VERSION ?= v0.10.647
 
 FN_HOST ?= 192.168.1.221
 #FN_HOST ?= 192.168.1.12
@@ -82,7 +81,7 @@ update_home_dirs:
 	$(info ******************************* Need to update home directories)
 
 config_jails:
-	./in_host.py config_jails $(FN_HOST) /mnt/vol1/jails
+	./in_host.py config_jails $(FN_HOST) /mnt/vol1/iocage
 
 setup_jails: remote_transmission_jail remote_sonarr_jail remote_sabnzbd_jail remote_radarr_jail remote_jackett_jail
 
@@ -159,7 +158,7 @@ remote_jail_sabnzbd_storage:
 #############################################################################
 
 jail_sonarr:
-	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_SONARR) $(JAIL_HOST_SONARR_IPV4)
+	-./in_host.py create_jail $(FN_HOST) $(JAIL_HOST_SONARR)
 
 remote_jail_sonarr_services:
 	ssh root@$(FN_HOST) make -C $(FN_SETUP_DIR_NAME) fn11_jail_sonarr_services
@@ -261,7 +260,7 @@ fn11_jail_sabnzbd_update:
 	jexec $(JAIL_HOST_SABNZBD) /root/$(FN_SETUP_DIR_NAME)/update_sabnzbd.sh
 
 fn11_jail_sonarr_services:
-	jexec $(JAIL_HOST_SONARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_sonarr_services
+	iocage exec $(JAIL_HOST_SONARR) make -C /root/$(FN_SETUP_DIR_NAME) jail_sonarr_services
 
 fn11_transmission_settings:
 	#NOTE: The transmission daemon must be stopped before updating the settings
@@ -502,5 +501,5 @@ jackett_source:
 
 FORCE:
 
-test:
+test: copy_setup_to_fn11 mount_sonarr_setup jail_sonarr remote_sonarr_jail
 	echo "TEST!!"
