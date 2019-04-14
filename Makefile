@@ -81,7 +81,7 @@ update_home_dirs:
 	$(info ******************************* Need to update home directories)
 
 config_jails:
-	./in_host.py config_jails $(FN_HOST) /mnt/vol1/iocage
+	ssh root@$(FN_HOST) iocage activate vol1
 
 setup_jails: remote_transmission_jail remote_sonarr_jail remote_sabnzbd_jail remote_radarr_jail remote_jackett_jail
 
@@ -426,7 +426,10 @@ clean_transmission:
 # sonarr rules
 ####################
 
-jail_sonarr_services: sonarr_dirs /usr/local/etc/rc.d/sonarr
+jail_sonarr_services: sonarr_groups sonarr_dirs /usr/local/etc/rc.d/sonarr
+
+sonarr_groups:
+	echo "TODO: Make a group for media"
 
 sonarr_dirs: /sonarr/config /tv /downloads /drone-factory /mfg-tv /drone-factory /transmission/downloads /sabnzbd/downloads
 
@@ -501,5 +504,5 @@ jackett_source:
 
 FORCE:
 
-test: copy_setup_to_fn11 mount_sonarr_setup jail_sonarr remote_sonarr_jail
+test: copy_setup_to_fn11 mount_sonarr_setup remote_sonarr_jail
 	echo "TEST!!"
